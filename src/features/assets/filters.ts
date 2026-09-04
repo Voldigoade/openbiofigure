@@ -1,0 +1,9 @@
+import type { AssetFilters } from "../../domain/assets/search";
+
+export const DEFAULT_ASSET_FILTERS: AssetFilters = {
+  query: "",
+  category: "",
+  provider: "",
+  license: "",
+  attribution: "all",
+};
