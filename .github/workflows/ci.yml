@@ -74,6 +74,12 @@ jobs:
         with:
           persist-credentials: false
       - uses: actions/dependency-review-action@v4
+        with:
+          # Tauri's Linux GTK3 graph currently pins glib 0.18.x. The advisory
+          # affects VariantStrIter APIs that OpenBioFigure does not call, and
+          # the Windows release target does not ship this Linux-only crate.
+          # Remove this exception as soon as upstream Tauri moves to glib 0.20+.
+          allow-ghsas: GHSA-wrw7-89jp-8q8g
 
   secrets:
     runs-on: ubuntu-latest
