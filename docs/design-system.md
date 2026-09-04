@@ -54,7 +54,7 @@ The interface uses precise, compact controls around a calm white document surfac
 
 - **Audience and primary job:** researchers, students, teachers, and scientific communicators composing editable figures while retaining licensing evidence.
 - **Scope:** general international research and education, as defined in `PRODUCT.md`.
-- **Locales and language policy:** English is the only exposed V0.1 locale. The message layer includes an initial French foundation, but a complete reviewed translation is future work and is not presented as complete.
+- **Locales and language policy:** English is the only exposed V0.2 locale. The message layer includes an initial French foundation, but a complete reviewed translation is future work and is not presented as complete.
 - **Usage scene:** repeated desktop and tablet work with dense controls, keyboard shortcuts, and a large visual document.
 - **Register:** product. Task clarity and familiar editor conventions lead.
 - **Restraint:** canvas, toolbar, forms, and layer controls remain quiet, flat, and predictable.
@@ -71,7 +71,7 @@ The compact humanist UI stack supports dense controls at 12–14px. Document tex
 
 ## Layout
 
-The desktop shell uses a 52px top toolbar, 260px asset panel, flexible workspace, 300px inspector, and 30px status bar. Tablet panels contract before controls wrap. Below 720px, the full editor is replaced by an honest small-screen notice. Scroll ownership belongs to each panel and to the central workspace, never the document body.
+The product has three predictable surfaces: Home, Editor, and Settings. Home prioritizes New figure and Open project, then blank templates and local recents. The desktop editor uses a 30px application menu, 52px tool bar, 260px asset panel, flexible workspace, 300px inspector, and 30px status bar. Tablet panels contract before controls wrap. Below 720px, the full editor is replaced by an honest small-screen notice. Home and Settings remain usable at narrower widths. Scroll ownership belongs to each panel, the central workspace, or the active full-page surface—never two nested viewport owners.
 
 ## Elevation & Depth
 

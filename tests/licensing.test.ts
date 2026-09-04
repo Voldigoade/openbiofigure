@@ -105,11 +105,17 @@ describe("project persistence and exports", () => {
     await storage.save(project);
     const loaded = await storage.load();
     expect(loaded).toEqual(project);
+    expect(await storage.listRecent()).toMatchObject([
+      { project: { metadata: { title: "Cell pathway" } } },
+    ]);
     expect(
       migrateProject(JSON.parse(buildProjectJson(project)) as unknown),
     ).toEqual(project);
     await storage.clear();
     expect(await storage.load()).toBeNull();
+    expect(await storage.listRecent()).toHaveLength(1);
+    await storage.clearRecent();
+    expect(await storage.listRecent()).toEqual([]);
   });
 
   it("embeds attribution metadata in exported SVG and creates safe filenames", () => {

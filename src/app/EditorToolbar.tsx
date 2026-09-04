@@ -22,7 +22,6 @@ import {
   Undo2,
   Ungroup,
 } from "lucide-react";
-import type { ChangeEvent, RefObject } from "react";
 import { IconButton } from "../components/ui/IconButton";
 import type { FabricEditor, SelectionSnapshot } from "../editor/FabricEditor";
 
@@ -34,10 +33,8 @@ interface EditorToolbarProps {
   panning: boolean;
   title: string;
   exportScale: number;
-  openProjectRef: RefObject<HTMLInputElement | null>;
   onNew: () => void;
   onRequestOpenProject: () => void;
-  onOpenProject: (event: ChangeEvent<HTMLInputElement>) => void;
   onSaveProject: () => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -56,10 +53,8 @@ export function EditorToolbar({
   panning,
   title,
   exportScale,
-  openProjectRef,
   onNew,
   onRequestOpenProject,
-  onOpenProject,
   onSaveProject,
   onUndo,
   onRedo,
@@ -71,14 +66,6 @@ export function EditorToolbar({
 }: EditorToolbarProps) {
   return (
     <header className="topbar">
-      <div className="brand-mark" aria-label="OpenBioFigure home">
-        <span className="brand-glyph">
-          <Circle />
-          <Minus />
-        </span>
-        <strong>OpenBioFigure</strong>
-        <span className="version">v0.2</span>
-      </div>
       <div className="toolbar-group document-actions">
         <IconButton label="New document" onClick={onNew}>
           <FilePlus2 />
@@ -93,13 +80,6 @@ export function EditorToolbar({
         >
           <Download />
         </IconButton>
-        <input
-          ref={openProjectRef}
-          className="visually-hidden"
-          type="file"
-          accept=".json,.obf.json,application/json"
-          onChange={(event) => void onOpenProject(event)}
-        />
       </div>
       <div className="toolbar-separator" />
       <div className="toolbar-group">

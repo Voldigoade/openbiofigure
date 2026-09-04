@@ -298,6 +298,14 @@ export class FabricEditor {
       padding: 2,
     });
     this.canvas.on("object:modified", () => this.commit());
+    this.canvas.on("object:moving", ({ target }) => {
+      if (!target || !this.#project.settings.grid.snap) return;
+      const size = this.#project.settings.grid.size;
+      target.set({
+        left: Math.round(target.left / size) * size,
+        top: Math.round(target.top / size) * size,
+      });
+    });
     this.canvas.on("selection:created", () => this.emit());
     this.canvas.on("selection:updated", () => this.emit());
     this.canvas.on("selection:cleared", () => this.emit());

@@ -14,7 +14,7 @@ OpenBioFigure combines local vector composition with a provider-independent scie
 
 ## Current limitations
 
-- The V0.1 editor is desktop-first; mobile presents a read-only guidance screen.
+- The editor is desktop-first; mobile can use Home and Settings but presents guidance instead of the full canvas workspace.
 - The verified seed catalog contains four Bioicons assets, not a comprehensive scientific library.
 - Connectors are editable straight lines without semantic anchoring or automatic routing.
 - PDF, charts, chemical structures, multipanel layouts, collaboration, and optional sync are not implemented.

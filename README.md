@@ -1,6 +1,6 @@
 # OpenBioFigure
 
-> **Status: early-stage V0.1.** The editor is usable for local figure composition and export, but its file format and small verified asset catalog may still evolve.
+> **Status: early-stage.** V0.1 is released; V0.2 is in active development. The editor is usable for local figure composition and export, but its file format and verified asset catalog may still evolve.
 
 OpenBioFigure is an open-source, browser-first editor for scientific figures. It combines editable vector composition with native tracking of scientific asset provenance, licenses, and required credits—without an account, backend, telemetry, or mandatory AI.
 
@@ -13,12 +13,13 @@ Scientific figures often require several tools, manual asset searches, and a sep
 - Text, rectangles, ellipses, lines, arrows, connectors, SVG assets, and groups
 - Multi-selection, transforms, layers, alignment, distribution, lock/visibility, undo/redo
 - Local autosave and versioned `.obf.json` project files
+- First-run Home, blank templates, and recent projects stored only on the device
 - Instant local asset search with category, source, license, and attribution filters
 - Publication check and Markdown/TXT attribution generation
 - Editable SVG and configurable-resolution PNG export
 - Sanitized local SVG import with optional provenance metadata
 
-The bundled seed catalog currently contains four individually verified Bioicons assets. OpenBioFigure helps track licensing metadata; it does not provide legal advice.
+The bundled seed catalog currently contains four individually verified Bioicons assets. Catalog expansion is in progress and accepts only assets with complete provenance and licensing evidence. OpenBioFigure helps track licensing metadata; it does not provide legal advice.
 
 ## Try it
 
@@ -43,7 +44,7 @@ pnpm test:e2e
 
 `pnpm build` produces a self-contained static site in `dist/`.
 
-Windows desktop development additionally requires stable Rust and the Tauri prerequisites. `pnpm desktop:dev` starts the native shell and `pnpm desktop:build` produces offline NSIS and MSI installers. See the [desktop build guide](docs/DESKTOP.md).
+Windows desktop development additionally requires stable Rust and the Tauri prerequisites. `pnpm desktop:dev` starts the native shell; local desktop builds are for development validation only. Official installers are rebuilt from a clean GitHub-hosted runner and published with checksums and attestations. See the [desktop build guide](docs/DESKTOP.md) and [release verification guide](docs/RELEASES.md).
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), the [architecture](docs/ARCHITECTURE.md), and the [project format](docs/PROJECT_FORMAT.md).
 

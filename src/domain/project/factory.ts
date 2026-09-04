@@ -28,7 +28,7 @@ export function createProject(
       title: "Untitled figure",
       createdAt: now,
       updatedAt: now,
-      applicationVersion: "0.1.0",
+      applicationVersion: "0.2.0",
     },
     document: {
       width: Math.round(dimensions.width),

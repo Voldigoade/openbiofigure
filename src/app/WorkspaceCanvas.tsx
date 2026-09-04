@@ -1,5 +1,6 @@
 import { ZoomIn, ZoomOut } from "lucide-react";
 import type {
+  CSSProperties,
   DragEvent,
   PointerEvent as ReactPointerEvent,
   RefObject,
@@ -96,11 +97,16 @@ export function WorkspaceCanvas({
           }}
         >
           <div
-            className="canvas-transform"
+            className={`canvas-transform${project.settings.grid.enabled ? " has-grid" : ""}`}
             style={{
               transform: `scale(${zoom})`,
               width: project.document.width,
               height: project.document.height,
+              ...(project.settings.grid.enabled
+                ? ({
+                    "--grid-size": `${project.settings.grid.size}px`,
+                  } as CSSProperties)
+                : {}),
             }}
           >
             <canvas

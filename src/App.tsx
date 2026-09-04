@@ -10,10 +10,14 @@ import {
 import { EditorStatus } from "./app/EditorStatus";
 import { EditorToolbar } from "./app/EditorToolbar";
 import { InspectorSidebar } from "./app/InspectorSidebar";
+import { ApplicationMenuBar } from "./app/ApplicationMenuBar";
+import { SettingsScreen } from "./app/SettingsScreen";
+import { StartScreen } from "./app/StartScreen";
 import { WorkspaceCanvas } from "./app/WorkspaceCanvas";
 import type { InspectorTab, PendingSvg, SaveState } from "./app/types";
 import { seedCatalog, seedProvider } from "./assets/catalog";
 import { NewDocumentDialog } from "./components/dialogs/NewDocumentDialog";
+import { KeyboardShortcutsDialog } from "./components/dialogs/KeyboardShortcutsDialog";
 import { SvgMetadataDialog } from "./components/dialogs/SvgMetadataDialog";
 import { sanitizeSvg } from "./domain/assets/sanitize";
 import type { AssetMetadata } from "./domain/assets/schema";
@@ -31,7 +35,10 @@ import { createProject } from "./domain/project/factory";
 import { ProjectHistory } from "./domain/project/history";
 import { migrateProject } from "./domain/project/migrations";
 import type { OpenBioFigureProject } from "./domain/project/schema";
-import { IndexedDbProjectStorage } from "./domain/storage/projectStorage";
+import {
+  IndexedDbProjectStorage,
+  type RecentProject,
+} from "./domain/storage/projectStorage";
 import {
   FabricEditor,
   type LayerSnapshot,
@@ -49,9 +56,44 @@ import {
 } from "./platform/desktopFiles";
 
 const storage = new IndexedDbProjectStorage();
+const ACTIVE_SESSION_KEY = "openbiofigure:active-editor";
+
+type AppView = "home" | "editor" | "settings";
+
+interface AppPreferences {
+  gridSize: number;
+  snapToGrid: boolean;
+}
+
+function loadPreferences(): AppPreferences {
+  try {
+    const value = JSON.parse(
+      window.localStorage.getItem("openbiofigure:preferences:v1") ?? "{}",
+    ) as Partial<AppPreferences>;
+    return {
+      gridSize:
+        Number.isInteger(value.gridSize) &&
+        Number(value.gridSize) >= 2 &&
+        Number(value.gridSize) <= 200
+          ? Number(value.gridSize)
+          : 20,
+      snapToGrid: value.snapToGrid === true,
+    };
+  } catch {
+    return { gridSize: 20, snapToGrid: false };
+  }
+}
 
 export function App() {
   const [project, setProject] = useState(() => createProject("journal"));
+  const [view, setView] = useState<AppView>("home");
+  const [settingsReturnView, setSettingsReturnView] = useState<
+    "home" | "editor"
+  >("home");
+  const [autosaveProject, setAutosaveProject] =
+    useState<OpenBioFigureProject | null>(null);
+  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
+  const [preferences, setPreferences] = useState(loadPreferences);
   const [selection, setSelection] = useState<SelectionSnapshot | null>(null);
   const [layers, setLayers] = useState<LayerSnapshot[]>([]);
   const [filters, setFilters] = useState(DEFAULT_ASSET_FILTERS);
@@ -60,6 +102,7 @@ export function App() {
   const [panning, setPanning] = useState(false);
   const [newDialog, setNewDialog] = useState(false);
   const [pendingSvg, setPendingSvg] = useState<PendingSvg | null>(null);
+  const [shortcutsDialog, setShortcutsDialog] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [exportScale, setExportScale] = useState(2);
   const [notice, setNotice] = useState<string | null>(null);
@@ -78,6 +121,10 @@ export function App() {
     left: number;
     top: number;
   } | null>(null);
+
+  const refreshRecent = useCallback(async () => {
+    setRecentProjects(await storage.listRecent());
+  }, []);
 
   const showNotice = useCallback((text: string) => {
     setNotice(text);
@@ -99,23 +146,32 @@ export function App() {
       autosaveTimer.current = window.setTimeout(() => {
         void storage
           .save(snapshot.project)
-          .then(() => setSaveState("saved"))
+          .then(async () => {
+            setAutosaveProject(snapshot.project);
+            await refreshRecent();
+            setSaveState("saved");
+          })
           .catch(() => setSaveState("error"));
       }, 450);
     },
-    [],
+    [refreshRecent],
   );
 
   useEffect(() => {
     let active = true;
     void storage
       .load()
-      .then((saved) => {
+      .then(async (saved) => {
         if (!active) return;
         const restored = saved ?? initialProjectRef.current;
         initialProjectRef.current = restored;
         setProject(restored);
+        setAutosaveProject(saved);
+        setRecentProjects(await storage.listRecent());
         historyRef.current = new ProjectHistory(restored);
+        if (saved && window.sessionStorage.getItem(ACTIVE_SESSION_KEY)) {
+          setView("editor");
+        }
         setReady(true);
       })
       .catch(() => {
@@ -130,7 +186,8 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    if (!ready || !canvasRef.current || editorRef.current) return;
+    if (!ready || view !== "editor" || !canvasRef.current || editorRef.current)
+      return;
     const editor = new FabricEditor(
       canvasRef.current,
       initialProjectRef.current,
@@ -141,7 +198,47 @@ export function App() {
       editor.dispose();
       editorRef.current = null;
     };
-  }, [ready, handleSnapshot]);
+  }, [ready, view, handleSnapshot]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      "openbiofigure:preferences:v1",
+      JSON.stringify(preferences),
+    );
+  }, [preferences]);
+
+  useEffect(() => {
+    const protectUnsavedChanges = (event: BeforeUnloadEvent) => {
+      if (saveState !== "saving") return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", protectUnsavedChanges);
+    return () =>
+      window.removeEventListener("beforeunload", protectUnsavedChanges);
+  }, [saveState]);
+
+  const activateProject = useCallback(
+    async (next: OpenBioFigureProject) => {
+      initialProjectRef.current = next;
+      setProject(next);
+      setSelection(null);
+      setLayers([]);
+      historyRef.current = new ProjectHistory(next);
+      window.sessionStorage.setItem(ACTIVE_SESSION_KEY, "true");
+      setView("editor");
+      setSaveState("saving");
+      try {
+        await storage.save(next);
+        setAutosaveProject(next);
+        await refreshRecent();
+        setSaveState("saved");
+      } catch {
+        setSaveState("error");
+      }
+    },
+    [refreshRecent],
+  );
 
   const replaceProject = useCallback(
     async (next: OpenBioFigureProject, resetHistory = true) => {
@@ -155,9 +252,19 @@ export function App() {
       else historyRef.current.replace(next);
       applyingHistory.current = false;
       await storage.save(next);
+      setAutosaveProject(next);
+      await refreshRecent();
       setSaveState("saved");
     },
-    [],
+    [refreshRecent],
+  );
+
+  const openOrReplaceProject = useCallback(
+    async (next: OpenBioFigureProject) => {
+      if (editorRef.current) await replaceProject(next);
+      else await activateProject(next);
+    },
+    [activateProject, replaceProject],
   );
 
   const undo = useCallback(async () => {
@@ -236,10 +343,10 @@ export function App() {
   }, [redo, undo, showNotice, fitToScreen]);
 
   useEffect(() => {
-    if (!ready || !editorRef.current) return;
+    if (!ready || view !== "editor" || !editorRef.current) return;
     const frame = window.requestAnimationFrame(fitToScreen);
     return () => window.cancelAnimationFrame(frame);
-  }, [ready, fitToScreen]);
+  }, [ready, view, fitToScreen]);
 
   const addAsset = useCallback(
     async (asset: AssetMetadata, point?: { x: number; y: number }) => {
@@ -355,7 +462,7 @@ export function App() {
     ]);
     if (!file) return;
     try {
-      await replaceProject(
+      await openOrReplaceProject(
         migrateProject(JSON.parse(file.contents) as unknown),
       );
       showNotice("Project opened");
@@ -389,7 +496,7 @@ export function App() {
     if (!file) return;
     try {
       const next = migrateProject(JSON.parse(await file.text()) as unknown);
-      await replaceProject(next);
+      await openOrReplaceProject(next);
       showNotice("Project opened");
     } catch (error) {
       showNotice(
@@ -419,8 +526,202 @@ export function App() {
   const publication = checkPublication(project);
   const locale: Locale = project.settings.locale;
   const localized = messages[locale];
+
+  const applyPreferences = (next: OpenBioFigureProject) => {
+    next.settings.grid.size = preferences.gridSize;
+    next.settings.grid.snap = preferences.snapToGrid;
+    return next;
+  };
+
+  const requestOpenProject = () => {
+    if (isDesktopRuntime()) void openDesktopProject();
+    else openProjectRef.current?.click();
+  };
+
+  useEffect(() => {
+    const onApplicationShortcut = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.matches("input, textarea, select") || target.isContentEditable)
+        return;
+      const mod = event.ctrlKey || event.metaKey;
+      if (mod && event.key.toLowerCase() === "n") {
+        event.preventDefault();
+        setNewDialog(true);
+      } else if (mod && event.key.toLowerCase() === "o") {
+        event.preventDefault();
+        requestOpenProject();
+      } else if (mod && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        void exportProject();
+      } else if (event.key === "?") {
+        event.preventDefault();
+        setShortcutsDialog(true);
+      }
+    };
+    window.addEventListener("keydown", onApplicationShortcut);
+    return () => window.removeEventListener("keydown", onApplicationShortcut);
+  });
+
+  const goHome = () => {
+    window.sessionStorage.removeItem(ACTIVE_SESSION_KEY);
+    setView("home");
+  };
+
+  const openSettings = (returnTo: "home" | "editor") => {
+    setSettingsReturnView(returnTo);
+    setView("settings");
+  };
+
+  const exitApp = () => {
+    if (isDesktopRuntime()) {
+      void import("@tauri-apps/api/window").then(({ getCurrentWindow }) =>
+        getCurrentWindow().close(),
+      );
+      return;
+    }
+    goHome();
+  };
+
+  const sharedFileInput = (
+    <input
+      ref={openProjectRef}
+      className="visually-hidden"
+      type="file"
+      accept=".json,.obf.json,application/json"
+      onChange={(event) => void openProject(event)}
+    />
+  );
+
+  const sharedOverlays = (
+    <>
+      {newDialog && (
+        <NewDocumentDialog
+          onClose={() => setNewDialog(false)}
+          onCreate={(preset, width, height) => {
+            const next = applyPreferences(
+              createProject(preset, { width, height }),
+            );
+            const operation = editorRef.current
+              ? replaceProject(next)
+              : activateProject(next);
+            void operation.then(() => {
+              setNewDialog(false);
+              window.requestAnimationFrame(fitToScreen);
+            });
+          }}
+        />
+      )}
+      {shortcutsDialog && (
+        <KeyboardShortcutsDialog onClose={() => setShortcutsDialog(false)} />
+      )}
+      {notice && (
+        <div className="toast" role="status">
+          {notice}
+        </div>
+      )}
+    </>
+  );
+
+  if (!ready) {
+    return (
+      <main className="app-loading" aria-live="polite">
+        <span className="loading-mark" aria-hidden="true" />
+        <p>Opening OpenBioFigure…</p>
+      </main>
+    );
+  }
+
+  if (view === "home") {
+    return (
+      <>
+        <StartScreen
+          autosave={autosaveProject}
+          recent={recentProjects}
+          onNew={() => setNewDialog(true)}
+          onOpen={requestOpenProject}
+          onContinue={() =>
+            autosaveProject && void activateProject(autosaveProject)
+          }
+          onOpenRecent={(next) => void activateProject(next)}
+          onRemoveRecent={(projectId) => {
+            void storage.removeRecent(projectId).then(refreshRecent);
+          }}
+          onCreatePreset={(preset) =>
+            void activateProject(applyPreferences(createProject(preset)))
+          }
+          onSettings={() => openSettings("home")}
+        />
+        {sharedFileInput}
+        {sharedOverlays}
+      </>
+    );
+  }
+
+  if (view === "settings") {
+    return (
+      <>
+        <SettingsScreen
+          gridSize={preferences.gridSize}
+          snapToGrid={preferences.snapToGrid}
+          recentCount={recentProjects.length}
+          onBack={() => {
+            if (settingsReturnView === "editor") void activateProject(project);
+            else setView("home");
+          }}
+          onGridSizeChange={(gridSize) => {
+            if (Number.isInteger(gridSize) && gridSize >= 2 && gridSize <= 200)
+              setPreferences((current) => ({ ...current, gridSize }));
+          }}
+          onSnapChange={(snapToGrid) =>
+            setPreferences((current) => ({ ...current, snapToGrid }))
+          }
+          onClearRecent={() => {
+            void storage.clearRecent().then(refreshRecent);
+          }}
+        />
+        {sharedFileInput}
+        {sharedOverlays}
+      </>
+    );
+  }
+
   return (
     <div className="app-shell">
+      <ApplicationMenuBar
+        getEditor={() => editorRef.current}
+        selection={selection}
+        canUndo={historyRef.current.canUndo}
+        canRedo={historyRef.current.canRedo}
+        gridEnabled={project.settings.grid.enabled}
+        onHome={goHome}
+        onNew={() => setNewDialog(true)}
+        onOpen={requestOpenProject}
+        onSave={() => void exportProject()}
+        onExportSvg={() => void exportSvg()}
+        onExportPng={() => void exportPng()}
+        onUndo={() => void undo()}
+        onRedo={() => void redo()}
+        onFit={fitToScreen}
+        onZoomIn={() => setZoom((current) => Math.min(3, current + 0.1))}
+        onZoomOut={() => setZoom((current) => Math.max(0.1, current - 0.1))}
+        onToggleGrid={() => {
+          const next = structuredClone(project);
+          next.settings.grid.enabled = !next.settings.grid.enabled;
+          void replaceProject(next, false);
+        }}
+        onOpenAssets={() =>
+          document
+            .querySelector<HTMLInputElement>(
+              "[aria-label='Search scientific assets']",
+            )
+            ?.focus()
+        }
+        onOpenLayers={() => setTab("layers")}
+        onOpenLicensing={() => setTab("licensing")}
+        onShortcuts={() => setShortcutsDialog(true)}
+        onSettings={() => openSettings("editor")}
+        onExit={exitApp}
+      />
       <EditorToolbar
         getEditor={() => editorRef.current}
         selection={selection}
@@ -429,13 +730,8 @@ export function App() {
         panning={panning}
         title={project.metadata.title}
         exportScale={exportScale}
-        openProjectRef={openProjectRef}
         onNew={() => setNewDialog(true)}
-        onRequestOpenProject={() => {
-          if (isDesktopRuntime()) void openDesktopProject();
-          else openProjectRef.current?.click();
-        }}
-        onOpenProject={(event) => void openProject(event)}
+        onRequestOpenProject={requestOpenProject}
         onSaveProject={() => void exportProject()}
         onUndo={() => void undo()}
         onRedo={() => void redo()}
@@ -501,18 +797,7 @@ export function App() {
         labels={localized}
         onOpenLicensing={() => setTab("licensing")}
       />
-      {newDialog && (
-        <NewDocumentDialog
-          onClose={() => setNewDialog(false)}
-          onCreate={(preset, width, height) => {
-            const next = createProject(preset, { width, height });
-            void replaceProject(next).then(() => {
-              setNewDialog(false);
-              fitToScreen();
-            });
-          }}
-        />
-      )}
+      {sharedFileInput}
       {pendingSvg && (
         <SvgMetadataDialog
           pending={pendingSvg}
@@ -524,11 +809,7 @@ export function App() {
           }}
         />
       )}
-      {notice && (
-        <div className="toast" role="status">
-          {notice}
-        </div>
-      )}
+      {sharedOverlays}
     </div>
   );
 }

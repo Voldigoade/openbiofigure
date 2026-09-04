@@ -15,12 +15,14 @@
 
 ## Canonical UI Map
 
-| Capability     | Canonical owner     | Source of truth  | Allowed variants           | Verification          |
-| -------------- | ------------------- | ---------------- | -------------------------- | --------------------- |
-| Select/Listbox | Browser native      | `src/App.tsx`    | finite native select       | keyboard + E2E        |
-| Form           | SVG metadata dialog | `src/App.tsx`    | import metadata            | custom validation E2E |
-| Scrollbar      | Browser native      | `src/styles.css` | workspace / panel internal | responsive E2E        |
-| Toast          | App status toast    | `src/App.tsx`    | success / warning / error  | live region + E2E     |
+| Capability     | Canonical owner     | Source of truth                  | Allowed variants                      | Verification          |
+| -------------- | ------------------- | -------------------------------- | ------------------------------------- | --------------------- |
+| Select/Listbox | Browser native      | `src/App.tsx`                    | finite native select                  | keyboard + E2E        |
+| Form           | SVG metadata dialog | `src/App.tsx`                    | import metadata                       | custom validation E2E |
+| Scrollbar      | Browser native      | `src/styles.css`                 | workspace / panel internal            | responsive E2E        |
+| Toast          | App status toast    | `src/App.tsx`                    | success / warning / error             | live region + E2E     |
+| Start screen   | Home                | `src/app/StartScreen.tsx`        | new / open / recent / blank templates | first-run E2E         |
+| App menu       | Editor menu bar     | `src/app/ApplicationMenuBar.tsx` | File / Edit / View / Help             | keyboard + E2E        |
 
 Native selects are intentional: the option sets are short and finite, and platform-owned popup geometry, keyboard behavior, and English locale presentation are accepted for supported browsers.
 
@@ -33,6 +35,9 @@ Native selects are intentional: the option sets are short and finite, and platfo
 - Metadata textareas have fixed height and no resize handle inside the bounded dialog.
 - Autosave state appears in the persistent status bar; short command feedback uses a polite live-region toast.
 - Destructive object deletion is reversible through Undo and therefore has no confirmation modal.
+- Home exposes a file-independent New figure action, Open project, autosave continuation, local recent projects, and immediately editable blank templates.
+- File, Edit, View, and Help menus expose only implemented commands. Common file and edit actions retain keyboard shortcuts.
+- Settings contains only working local preferences, local recent-history controls, privacy information, and project information.
 
 ## Navigation and responsive behavior
 
@@ -47,4 +52,4 @@ Native selects are intentional: the option sets are short and finite, and platfo
 - IndexedDB autosave is pessimistic and reports saving/saved/error states.
 - Project export is the durable portable backup; no cloud persistence is implied.
 - Invalid projects and SVGs fail closed with recoverable UI feedback.
-- Offline use is available after same-origin resources have been cached once.
+- A build-generated precache manifest makes all application chunks available after installation. The browser E2E suite disables networking and verifies project recovery, bundled asset search, editing, and SVG export.
