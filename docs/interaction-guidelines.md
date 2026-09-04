@@ -1,4 +1,4 @@
-# UX contract
+# Interaction guidelines
 
 ## Product context
 
@@ -9,9 +9,9 @@
 
 ## Visual contract
 
-- `DESIGN.md` owns design intent and semantic values.
+- `design-system.md` owns design intent and semantic values.
 - `src/styles.css` is the runtime CSS adapter and mirrors the semantic token names.
-- The light editor theme is the only supported V0.1 theme.
+- The light editor theme is the currently supported theme.
 
 ## Canonical UI Map
 

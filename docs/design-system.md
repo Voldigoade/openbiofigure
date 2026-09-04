@@ -1,5 +1,5 @@
 ---
-version: alpha
+version: 0.2-draft
 name: "OpenBioFigure"
 description: "A scientific vector workbench combining precise editing with visible provenance proofing."
 colors:
@@ -46,20 +46,19 @@ components:
 
 ## Overview
 
-### Creative North Star
+### Design direction
 
-The interface is a digital microscopy workbench crossed with a journal proofing desk: precise instrument-like controls surround a calm white paper surface, while provenance behaves like a visible editorial proof mark.
+The interface uses precise, compact controls around a calm white document surface. Provenance remains visible during scientific asset workflows without competing with figure editing.
 
 ### Product context and register
 
 - **Audience and primary job:** researchers, students, teachers, and scientific communicators composing editable figures while retaining licensing evidence.
-- **Target markets and evidence:** general international research and education, as defined in `docs/PRODUCT.md`.
+- **Scope:** general international research and education, as defined in `PRODUCT.md`.
 - **Locales and language policy:** English is the only exposed V0.1 locale. The message layer includes an initial French foundation, but a complete reviewed translation is future work and is not presented as complete.
 - **Usage scene:** repeated desktop and tablet work with dense controls, keyboard shortcuts, and a large visual document.
 - **Register:** product. Task clarity and familiar editor conventions lead.
-- **Memorable signature:** a thin cyan provenance rail ties selected scientific assets to their licensing record and publication check.
 - **Restraint:** canvas, toolbar, forms, and layer controls remain quiet, flat, and predictable.
-- **Anti-references:** no marketing hero, glassmorphism, playful sticker UI, AI-generation framing, or oversized card dashboard.
+- **Excluded patterns:** marketing-first layouts, ornamental effects, and controls that obscure the editing workflow.
 - **Token ownership/runtime mapping:** this file is the design source. `src/styles.css` mirrors these semantic tokens as CSS custom properties; shared UI classes and React components consume only those variables.
 
 ## Colors

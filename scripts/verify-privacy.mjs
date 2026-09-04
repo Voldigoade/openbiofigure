@@ -10,7 +10,6 @@ const ignored = new Set([
   "coverage",
   "playwright-report",
   "test-results",
-  ".premium-audit",
 ]);
 const textExtensions = new Set([
   ".md",
