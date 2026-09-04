@@ -22,6 +22,8 @@ The bundled seed catalog currently contains four individually verified Bioicons 
 
 ## Try it
 
+[Open OpenBioFigure in your browser](https://voldigoade.github.io/openbiofigure/), or run it locally:
+
 ```bash
 pnpm install
 pnpm dev

@@ -2,7 +2,7 @@
 
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project intends to follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.1.0] - 2026-09-04
 
 ### Added
 
@@ -13,5 +13,3 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 - Four-asset verified Bioicons seed catalog with local search and filters.
 - Publication check and Markdown/TXT attribution generation.
 - Reproducible asset validation, SVG sanitizer, privacy audit, CI, and browser tests.
-
-This work is prepared for `v0.1.0`; no release date or remote release is declared here.
