@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose an improvement grounded in a scientific workflow or user need.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or need
+      description: Describe the workflow, user, and problem without assuming a particular implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: What should become possible or easier?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Include relevant examples, accessibility needs, licensing constraints, or alternatives.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and discussions first.
+          required: true
+        - label: This request does not include private or confidential information.
+          required: true

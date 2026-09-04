@@ -1,0 +1,34 @@
+[
+  {
+    "id": "bioicons-mitochondrion-orange",
+    "text": "mitochondrion orange schematic mitochondrion with visible cristae. intracellular components bioicons cc-by-3.0 mitochondria mitochondrion organelle cell cristae energy",
+    "category": "Intracellular components",
+    "provider": "Bioicons",
+    "license": "CC-BY-3.0",
+    "attributionRequired": true
+  },
+  {
+    "id": "bioicons-generic-bacterium",
+    "text": "generic bacterium a simple rod-shaped bacterium with flagella. microbiology bioicons cc0-1.0 bacterium bacteria microbe microbiology flagella cell",
+    "category": "Microbiology",
+    "provider": "Bioicons",
+    "license": "CC0-1.0",
+    "attributionRequired": false
+  },
+  {
+    "id": "bioicons-phage",
+    "text": "bacteriophage a bacteriophage schematic for microbiology diagrams. microbiology bioicons cc0-1.0 phage bacteriophage virus microbiology infection",
+    "category": "Microbiology",
+    "provider": "Bioicons",
+    "license": "CC0-1.0",
+    "attributionRequired": false
+  },
+  {
+    "id": "bioicons-microscope-cartoon",
+    "text": "microscope a compact illustrated laboratory microscope. lab apparatus bioicons cc0-1.0 microscope laboratory imaging equipment optics",
+    "category": "Lab apparatus",
+    "provider": "Bioicons",
+    "license": "CC0-1.0",
+    "attributionRequired": false
+  }
+]

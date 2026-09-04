@@ -1,0 +1,20 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": ["src"],
+  "locale": "en-US",
+  "canonicalMap": "UX-CONTRACT.md",
+  "requiredCapabilities": ["Select/Listbox", "Form", "Scrollbar", "Toast"],
+  "ownership": {
+    "Select/Listbox": "native"
+  },
+  "requiredCommands": ["unit", "e2e", "premium"],
+  "commands": {
+    "unit": "pnpm test",
+    "e2e": "pnpm test:e2e",
+    "premium": "python audit_project.py . --mode strict"
+  },
+  "evidence": {
+    "fullFlow": "tests/e2e/editor.spec.ts",
+    "security": "tests/assets.test.ts"
+  }
+}

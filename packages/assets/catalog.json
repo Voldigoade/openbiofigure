@@ -1,0 +1,142 @@
+[
+  {
+    "id": "bioicons-mitochondrion-orange",
+    "title": "Mitochondrion",
+    "description": "Orange schematic mitochondrion with visible cristae.",
+    "keywords": [
+      "mitochondria",
+      "mitochondrion",
+      "organelle",
+      "cell",
+      "cristae",
+      "energy"
+    ],
+    "category": "Intracellular components",
+    "file": "mitochondrion.svg",
+    "integrity": "sha256-82E4CA25C5781B84055D5D7A56B213ACE215715AF2B7A66C9D220B15489D0A98",
+    "source": {
+      "provider": "Bioicons",
+      "sourceUrl": "https://github.com/duerrsimon/bioicons/blob/main/static/icons/cc-by-3.0/Intracellular_components/Servier/mitochondrium-orange.svg",
+      "assetUrl": "https://raw.githubusercontent.com/duerrsimon/bioicons/refs/heads/main/static/icons/cc-by-3.0/Intracellular_components/Servier/mitochondrium-orange.svg",
+      "retrievedAt": "2026-09-04"
+    },
+    "creator": {
+      "name": "Servier Medical Art",
+      "url": "https://smart.servier.com/"
+    },
+    "license": {
+      "id": "CC-BY-3.0",
+      "name": "Creative Commons Attribution 3.0 Unported",
+      "url": "https://creativecommons.org/licenses/by/3.0/",
+      "attributionRequired": true
+    },
+    "attribution": {
+      "text": "Mitochondrion by Servier Medical Art, distributed via Bioicons, licensed under CC BY 3.0.",
+      "modified": false,
+      "modificationNotes": null
+    }
+  },
+  {
+    "id": "bioicons-generic-bacterium",
+    "title": "Generic bacterium",
+    "description": "A simple rod-shaped bacterium with flagella.",
+    "keywords": [
+      "bacterium",
+      "bacteria",
+      "microbe",
+      "microbiology",
+      "flagella",
+      "cell"
+    ],
+    "category": "Microbiology",
+    "file": "bacterium.svg",
+    "integrity": "sha256-2984B266EEDFAD88AED6701FB0F5D3D1A11DBBDC88326A0F160E170D32DF21BF",
+    "source": {
+      "provider": "Bioicons",
+      "sourceUrl": "https://github.com/duerrsimon/bioicons/blob/main/static/icons/cc-0/Microbiology/Pauline_Franz/generic-bacterium.svg",
+      "assetUrl": "https://raw.githubusercontent.com/duerrsimon/bioicons/refs/heads/main/static/icons/cc-0/Microbiology/Pauline_Franz/generic-bacterium.svg",
+      "retrievedAt": "2026-09-04"
+    },
+    "creator": {
+      "name": "Pauline Franz",
+      "url": null
+    },
+    "license": {
+      "id": "CC0-1.0",
+      "name": "CC0 1.0 Universal",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "attributionRequired": false
+    },
+    "attribution": {
+      "text": "Generic bacterium by Pauline Franz, distributed via Bioicons under CC0 1.0.",
+      "modified": false,
+      "modificationNotes": null
+    }
+  },
+  {
+    "id": "bioicons-phage",
+    "title": "Bacteriophage",
+    "description": "A bacteriophage schematic for microbiology diagrams.",
+    "keywords": [
+      "phage",
+      "bacteriophage",
+      "virus",
+      "microbiology",
+      "infection"
+    ],
+    "category": "Microbiology",
+    "file": "phage.svg",
+    "integrity": "sha256-4B810CA6CD57ED251141A4F701FF98BCBE7E905E0CB982D96304C218BA8CF57E",
+    "source": {
+      "provider": "Bioicons",
+      "sourceUrl": "https://github.com/duerrsimon/bioicons/blob/main/static/icons/cc-0/Microbiology/James-Lloyd/Phage.svg",
+      "assetUrl": "https://raw.githubusercontent.com/duerrsimon/bioicons/refs/heads/main/static/icons/cc-0/Microbiology/James-Lloyd/Phage.svg",
+      "retrievedAt": "2026-09-04"
+    },
+    "creator": {
+      "name": "James Lloyd",
+      "url": null
+    },
+    "license": {
+      "id": "CC0-1.0",
+      "name": "CC0 1.0 Universal",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "attributionRequired": false
+    },
+    "attribution": {
+      "text": "Bacteriophage by James Lloyd, distributed via Bioicons under CC0 1.0.",
+      "modified": false,
+      "modificationNotes": null
+    }
+  },
+  {
+    "id": "bioicons-microscope-cartoon",
+    "title": "Microscope",
+    "description": "A compact illustrated laboratory microscope.",
+    "keywords": ["microscope", "laboratory", "imaging", "equipment", "optics"],
+    "category": "Lab apparatus",
+    "file": "microscope.svg",
+    "integrity": "sha256-3E08DF9594346D745D8380F0B68F257308CAD5CB94252A0D5FA93D3EA1AC6412",
+    "source": {
+      "provider": "Bioicons",
+      "sourceUrl": "https://github.com/duerrsimon/bioicons/blob/main/static/icons/cc-0/Lab_apparatus/Derek-Croote/microscope-cartoon.svg",
+      "assetUrl": "https://raw.githubusercontent.com/duerrsimon/bioicons/refs/heads/main/static/icons/cc-0/Lab_apparatus/Derek-Croote/microscope-cartoon.svg",
+      "retrievedAt": "2026-09-04"
+    },
+    "creator": {
+      "name": "Derek Croote",
+      "url": null
+    },
+    "license": {
+      "id": "CC0-1.0",
+      "name": "CC0 1.0 Universal",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "attributionRequired": false
+    },
+    "attribution": {
+      "text": "Microscope by Derek Croote, distributed via Bioicons under CC0 1.0.",
+      "modified": false,
+      "modificationNotes": null
+    }
+  }
+]

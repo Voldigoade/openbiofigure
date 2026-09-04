@@ -1,0 +1,43 @@
+# Architecture
+
+OpenBioFigure is a static, browser-first React application. All editing, validation, search, persistence, and export happen locally; no backend, account, telemetry, or AI service is required.
+
+## Boundaries
+
+```text
+React application shell
+  ├─ FabricEditor adapter ── Fabric.js canvas
+  ├─ domain/project ──────── versioned engine-independent model
+  ├─ domain/assets ───────── schemas, sanitizer, search, providers
+  ├─ domain/licensing ────── publication checks and attribution
+  ├─ domain/storage ──────── IndexedDB autosave
+  └─ domain/export ───────── OBF JSON, SVG metadata, downloads
+
+packages/assets + scripts/assets
+  └─ verified files, source metadata, hash/safety validation, search index
+```
+
+React state updates on committed canvas changes and selection changes, not on every pointer movement. Fabric owns the high-frequency interactive rendering loop. The adapter maps objects to `OpenBioFigureProject`; Fabric’s internal serialization is never the public format.
+
+## Data flow
+
+1. A catalog provider returns validated normalized metadata and sanitized SVG.
+2. Placing an asset embeds its metadata and SVG in the local project.
+3. The editor serializes committed object state into the versioned project model.
+4. IndexedDB autosave stores that model; `.obf.json` uses the same validated contract.
+5. Publication checks derive only from assets actually referenced by canvas objects.
+6. SVG export embeds a machine-readable provenance summary; attribution files contain the complete ledger.
+
+## Extension points
+
+- `AssetProvider` for optional catalog sources
+- engine adapter boundary for rendering/editing
+- versioned migrations for project format evolution
+- domain export helpers for future PDF/journal exporters
+- object `kind` union for future scientific shapes, charts, chemical structures, and panels
+
+New extensions must preserve offline usefulness and must not weaken provenance or SVG-safety controls.
+
+## Runtime and deployment
+
+Vite builds static files to `dist/`. A small service worker caches same-origin GET resources after first load for offline use. IndexedDB stores only the current local autosave. The static output is self-hostable and compatible with GitHub Pages or any static host.

@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use this project in research, please cite the software using this metadata."
+title: "OpenBioFigure"
+type: software
+authors:
+  - family-names: "Voldigoade"
+version: "0.1.0"
+license: "Apache-2.0"
+abstract: "A local-first, attribution-aware open-source editor for scientific vector figures."
+keywords:
+  - scientific-figures
+  - biology
+  - medicine
+  - vector-graphics
+  - provenance

@@ -1,0 +1,34 @@
+# Operating systems
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+
+# Common build and dependency output
+node_modules/
+dist/
+build/
+coverage/
+.cache/
+*.tsbuildinfo
+playwright-report/
+test-results/
+premium-audit.json
+.playwright-cli/
