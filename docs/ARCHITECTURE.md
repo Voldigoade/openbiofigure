@@ -1,6 +1,6 @@
 # Architecture
 
-OpenBioFigure is a static, browser-first React application. All editing, validation, search, persistence, and export happen locally; no backend, account, telemetry, or AI service is required.
+OpenBioFigure is a local-first React application delivered both as a static website and through a thin Tauri desktop shell. All editing, validation, search, persistence, and export happen locally; no backend, account, telemetry, or AI service is required.
 
 ## Boundaries
 
@@ -12,6 +12,9 @@ React application shell
   ├─ domain/licensing ────── publication checks and attribution
   ├─ domain/storage ──────── IndexedDB autosave
   └─ domain/export ───────── OBF JSON, SVG metadata, downloads
+
+Tauri desktop shell
+  └─ scoped native dialogs ─ project/SVG open and project/SVG/PNG/credits save
 
 packages/assets + scripts/assets
   └─ verified files, source metadata, hash/safety validation, search index
@@ -41,3 +44,5 @@ New extensions must preserve offline usefulness and must not weaken provenance o
 ## Runtime and deployment
 
 Vite builds static files to `dist/`. A small service worker caches same-origin GET resources after first load for offline use. IndexedDB stores only the current local autosave. The static output is self-hostable and compatible with GitHub Pages or any static host.
+
+Tauri 2 packages the same output for Windows with native user-selected file dialogs and no broad filesystem or shell capability. Offline NSIS and MSI installers embed WebView2. See [ADR-004](architecture/ADR-004-desktop-runtime.md) and the [desktop build guide](DESKTOP.md).

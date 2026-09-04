@@ -33,7 +33,7 @@ Open the local URL printed by Vite. The application works client-side and can be
 
 ## Development
 
-Requires Node.js 20+ and pnpm 10.
+Requires Node.js 20+ and pnpm 11.
 
 ```bash
 pnpm install
@@ -42,6 +42,8 @@ pnpm test:e2e
 ```
 
 `pnpm build` produces a self-contained static site in `dist/`.
+
+Windows desktop development additionally requires stable Rust and the Tauri prerequisites. `pnpm desktop:dev` starts the native shell and `pnpm desktop:build` produces offline NSIS and MSI installers. See the [desktop build guide](docs/DESKTOP.md).
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), the [architecture](docs/ARCHITECTURE.md), and the [project format](docs/PROJECT_FORMAT.md).
 

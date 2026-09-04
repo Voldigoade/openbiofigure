@@ -1,5 +1,5 @@
 import { ChevronDown, FilePlus2, Search, Upload, X } from "lucide-react";
-import { useMemo, type ChangeEvent } from "react";
+import { useMemo, useRef, type ChangeEvent } from "react";
 import { getSeedSvg, seedCatalog } from "../../assets/catalog";
 import { FormField } from "../../components/ui/FormField";
 import { IconButton } from "../../components/ui/IconButton";
@@ -15,6 +15,7 @@ interface AssetsPanelProps {
   setFilters: (filters: AssetFilters) => void;
   onAdd: (asset: AssetMetadata) => void;
   onFile: (event: ChangeEvent<HTMLInputElement>) => void;
+  onRequestFile?: () => void;
 }
 
 export function AssetsPanel({
@@ -23,7 +24,9 @@ export function AssetsPanel({
   setFilters,
   onAdd,
   onFile,
+  onRequestFile,
 }: AssetsPanelProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const results = useMemo(() => searchAssets(seedCatalog, filters), [filters]);
   const categories = [...new Set(seedCatalog.map((asset) => asset.category))];
   const providers = [
@@ -176,15 +179,20 @@ export function AssetsPanel({
           </div>
         )}
       </div>
-      <label className="import-button">
+      <button
+        type="button"
+        className="import-button"
+        onClick={onRequestFile ?? (() => fileInputRef.current?.click())}
+      >
         <Upload aria-hidden="true" /> Import local SVG
-        <input
-          className="visually-hidden"
-          type="file"
-          accept="image/svg+xml,.svg"
-          onChange={onFile}
-        />
-      </label>
+      </button>
+      <input
+        ref={fileInputRef}
+        className="visually-hidden"
+        type="file"
+        accept="image/svg+xml,.svg"
+        onChange={onFile}
+      />
     </aside>
   );
 }

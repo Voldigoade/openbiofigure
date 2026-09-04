@@ -36,6 +36,7 @@ interface EditorToolbarProps {
   exportScale: number;
   openProjectRef: RefObject<HTMLInputElement | null>;
   onNew: () => void;
+  onRequestOpenProject: () => void;
   onOpenProject: (event: ChangeEvent<HTMLInputElement>) => void;
   onSaveProject: () => void;
   onUndo: () => void;
@@ -57,6 +58,7 @@ export function EditorToolbar({
   exportScale,
   openProjectRef,
   onNew,
+  onRequestOpenProject,
   onOpenProject,
   onSaveProject,
   onUndo,
@@ -75,16 +77,13 @@ export function EditorToolbar({
           <Minus />
         </span>
         <strong>OpenBioFigure</strong>
-        <span className="version">v0.1</span>
+        <span className="version">v0.2</span>
       </div>
       <div className="toolbar-group document-actions">
         <IconButton label="New document" onClick={onNew}>
           <FilePlus2 />
         </IconButton>
-        <IconButton
-          label="Open project"
-          onClick={() => openProjectRef.current?.click()}
-        >
+        <IconButton label="Open project" onClick={onRequestOpenProject}>
           <FolderOpen />
         </IconButton>
         <IconButton

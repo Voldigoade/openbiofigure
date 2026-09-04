@@ -31,3 +31,5 @@ coverage/
 playwright-report/
 test-results/
 .playwright-cli/
+src-tauri/target/
+src-tauri/gen/schemas/

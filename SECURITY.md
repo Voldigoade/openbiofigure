@@ -18,5 +18,6 @@ No response-time guarantee is made at this early stage, but reports will be asse
 - compromised, typosquatted, or unexpectedly modified dependencies;
 - leakage of local projects, provenance records, credentials, or browser data;
 - export content that bypasses sanitization.
+- desktop capability, native-dialog, installer, or file-scope bypasses.
 
 OpenBioFigure treats project files, imported SVGs, metadata, and dependencies as potentially untrusted. See [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) for controls and known limitations.

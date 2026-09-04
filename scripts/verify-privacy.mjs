@@ -29,6 +29,7 @@ const textExtensions = new Set([
 const home = resolve(homedir()).replaceAll("\\", "/").toLowerCase();
 const localUser = basename(homedir()).toLowerCase();
 const machineName = hostname().toLowerCase();
+const ignoredPaths = new Set(["src-tauri/gen", "src-tauri/target"]);
 const windowsUserPath = new RegExp(
   String.raw`[A-Z]:[\\/]+` + `Users` + String.raw`[\\/]+[^\s"'<>\\/]+`,
   "gi",
@@ -43,6 +44,8 @@ async function walk(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (ignored.has(entry.name)) continue;
     const path = join(directory, entry.name);
+    const projectPath = relative(root, path).replaceAll("\\", "/");
+    if (ignoredPaths.has(projectPath)) continue;
     if (entry.isDirectory()) await walk(path);
     else {
       const extension = entry.name.includes(".")
@@ -54,7 +57,7 @@ async function walk(directory) {
       )
         continue;
       const content = await readFile(path, "utf8");
-      const projectPath = relative(root, path);
+      const displayPath = relative(root, path);
       const normalized = content.replaceAll("\\", "/").toLowerCase();
       if (
         normalized.includes(home) ||
@@ -62,10 +65,10 @@ async function walk(directory) {
       )
         findings.push(`${relative(root, path)}: local user path`);
       if (
-        projectPath !== join("scripts", "verify-privacy.mjs") &&
+        displayPath !== join("scripts", "verify-privacy.mjs") &&
         (windowsUserPath.test(content) || unixUserPath.test(content))
       )
-        findings.push(`${projectPath}: absolute user path`);
+        findings.push(`${displayPath}: absolute user path`);
       windowsUserPath.lastIndex = 0;
       unixUserPath.lastIndex = 0;
       if (machineName.length > 3 && normalized.includes(machineName))

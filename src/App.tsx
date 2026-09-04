@@ -40,6 +40,13 @@ import {
 import { AssetsPanel } from "./features/assets/AssetsPanel";
 import { DEFAULT_ASSET_FILTERS } from "./features/assets/filters";
 import { messages, type Locale } from "./i18n/messages";
+import {
+  dataUrlToBytes,
+  isDesktopRuntime,
+  openDesktopTextFile,
+  saveDesktopBinaryFile,
+  saveDesktopTextFile,
+} from "./platform/desktopFiles";
 
 const storage = new IndexedDbProjectStorage();
 
@@ -280,38 +287,100 @@ export function App() {
     }
   };
 
-  const exportProject = () =>
-    makeDownload(
-      buildProjectJson(project),
-      "application/json",
-      `${safeFileStem(project.metadata.title)}.obf.json`,
-    );
-  const exportSvg = () => {
+  const exportProject = async () => {
+    const filename = `${safeFileStem(project.metadata.title)}.obf.json`;
+    const contents = buildProjectJson(project);
+    if (
+      !(await saveDesktopTextFile(contents, filename, [
+        { name: "OpenBioFigure project", extensions: ["obf.json", "json"] },
+      ]))
+    ) {
+      makeDownload(contents, "application/json", filename);
+    }
+  };
+  const exportSvg = async () => {
     const editor = editorRef.current;
     if (!editor) return;
-    makeDownload(
-      buildSvgExport(editor.getSvg(), project),
-      "image/svg+xml",
-      `${safeFileStem(project.metadata.title)}.svg`,
-    );
+    const filename = `${safeFileStem(project.metadata.title)}.svg`;
+    const contents = buildSvgExport(editor.getSvg(), project);
+    if (
+      !(await saveDesktopTextFile(contents, filename, [
+        { name: "Scalable Vector Graphics", extensions: ["svg"] },
+      ]))
+    ) {
+      makeDownload(contents, "image/svg+xml", filename);
+    }
     showNotice("SVG exported");
   };
-  const exportPng = () => {
+  const exportPng = async () => {
     const dataUrl = editorRef.current?.getPng(exportScale);
     if (!dataUrl) return;
-    const anchor = document.createElement("a");
-    anchor.href = dataUrl;
-    anchor.download = `${safeFileStem(project.metadata.title)}@${exportScale}x.png`;
-    anchor.click();
+    const filename = `${safeFileStem(project.metadata.title)}@${exportScale}x.png`;
+    if (
+      !(await saveDesktopBinaryFile(await dataUrlToBytes(dataUrl), filename, [
+        { name: "Portable Network Graphics", extensions: ["png"] },
+      ]))
+    ) {
+      const anchor = document.createElement("a");
+      anchor.href = dataUrl;
+      anchor.download = filename;
+      anchor.click();
+    }
     showNotice(`PNG exported at ${exportScale}×`);
   };
-  const exportAttributions = (format: "markdown" | "text") => {
+  const exportAttributions = async (format: "markdown" | "text") => {
     const output = generateAttributions(project);
-    makeDownload(
-      format === "markdown" ? output.markdown : output.text,
-      format === "markdown" ? "text/markdown" : "text/plain",
-      format === "markdown" ? "ATTRIBUTIONS.md" : "Attribution.txt",
-    );
+    const markdown = format === "markdown";
+    const contents = markdown ? output.markdown : output.text;
+    const filename = markdown ? "ATTRIBUTIONS.md" : "Attribution.txt";
+    if (
+      !(await saveDesktopTextFile(contents, filename, [
+        {
+          name: markdown ? "Markdown" : "Plain text",
+          extensions: [markdown ? "md" : "txt"],
+        },
+      ]))
+    ) {
+      makeDownload(
+        contents,
+        markdown ? "text/markdown" : "text/plain",
+        filename,
+      );
+    }
+  };
+
+  const openDesktopProject = async () => {
+    const file = await openDesktopTextFile([
+      { name: "OpenBioFigure project", extensions: ["obf.json", "json"] },
+    ]);
+    if (!file) return;
+    try {
+      await replaceProject(
+        migrateProject(JSON.parse(file.contents) as unknown),
+      );
+      showNotice("Project opened");
+    } catch (error) {
+      showNotice(
+        error instanceof Error ? error.message : "Project could not be opened",
+      );
+    }
+  };
+
+  const importDesktopSvg = async () => {
+    const file = await openDesktopTextFile([
+      { name: "Scalable Vector Graphics", extensions: ["svg"] },
+    ]);
+    if (!file) return;
+    try {
+      const result = sanitizeSvg(file.contents);
+      setPendingSvg({
+        fileName: file.fileName,
+        svg: result.svg,
+        changed: result.changed,
+      });
+    } catch (error) {
+      showNotice(error instanceof Error ? error.message : "SVG import failed");
+    }
   };
 
   const openProject = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -362,8 +431,12 @@ export function App() {
         exportScale={exportScale}
         openProjectRef={openProjectRef}
         onNew={() => setNewDialog(true)}
+        onRequestOpenProject={() => {
+          if (isDesktopRuntime()) void openDesktopProject();
+          else openProjectRef.current?.click();
+        }}
         onOpenProject={(event) => void openProject(event)}
-        onSaveProject={exportProject}
+        onSaveProject={() => void exportProject()}
         onUndo={() => void undo()}
         onRedo={() => void redo()}
         onPanningChange={setPanning}
@@ -374,8 +447,8 @@ export function App() {
           void replaceProject(next, false);
         }}
         onExportScaleChange={setExportScale}
-        onExportSvg={exportSvg}
-        onExportPng={exportPng}
+        onExportSvg={() => void exportSvg()}
+        onExportPng={() => void exportPng()}
       />
 
       <div className="editor-grid">
@@ -385,6 +458,9 @@ export function App() {
           setFilters={setFilters}
           onAdd={(asset) => void addAsset(asset)}
           onFile={(event) => void handleSvgFile(event)}
+          onRequestFile={
+            isDesktopRuntime() ? () => void importDesktopSvg() : undefined
+          }
         />
         <WorkspaceCanvas
           project={project}
@@ -414,7 +490,7 @@ export function App() {
           layersLabel={localized.layers}
           getEditor={() => editorRef.current}
           onTabChange={setTab}
-          onExportAttributions={exportAttributions}
+          onExportAttributions={(format) => void exportAttributions(format)}
         />
       </div>
 

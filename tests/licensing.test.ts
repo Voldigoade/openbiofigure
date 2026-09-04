@@ -120,7 +120,7 @@ describe("project persistence and exports", () => {
       project,
     );
     expect(result).toContain("openbiofigure-metadata");
-    expect(result).toContain("OpenBioFigure 0.1.0");
+    expect(result).toContain("OpenBioFigure 0.2.0");
     expect(safeFileStem(project.metadata.title)).toBe("energie-signal-01");
   });
 });
