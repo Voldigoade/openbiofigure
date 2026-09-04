@@ -31,5 +31,16 @@ coverage/
 playwright-report/
 test-results/
 .playwright-cli/
-src-tauri/target/
-src-tauri/gen/schemas/
+# Native build output and installer payloads (release artifacts are CI-only)
+**/target/
+**/bundle/
+src-tauri/gen/
+*.exe
+*.msi
+*.pdb
+*.wixpdb
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+MicrosoftEdgeWebView2RuntimeInstaller*

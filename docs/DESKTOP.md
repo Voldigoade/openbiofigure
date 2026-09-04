@@ -25,6 +25,8 @@ The command builds:
 
 Both include the Microsoft WebView2 offline installer. Release automation generates SHA-256 checksums, an SPDX JSON SBOM, and GitHub build provenance attestations.
 
+Local packages are for development validation only and must never be distributed or attached to a release. Official downloads are rebuilt from the tagged commit on a clean GitHub-hosted runner. See [release trust and verification](RELEASES.md).
+
 ## Security boundary
 
 The desktop shell exposes no command execution and no unrestricted directory scope. It can read or write only files explicitly selected through the native open/save dialog during the current process. The authoritative capability definition is [`src-tauri/capabilities/main.json`](../src-tauri/capabilities/main.json).

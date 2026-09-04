@@ -27,7 +27,8 @@
     "assets:validate": "tsx scripts/assets/validate-catalog.ts",
     "docs:validate": "node scripts/validate-docs.mjs",
     "verify:privacy": "node scripts/verify-privacy.mjs",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm assets:validate && pnpm docs:validate && pnpm verify:privacy && pnpm build"
+    "verify:source": "node scripts/verify-source-tree.mjs",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm assets:validate && pnpm docs:validate && pnpm verify:privacy && pnpm verify:source && pnpm build"
   },
   "dependencies": {
     "@tauri-apps/api": "2.11.1",

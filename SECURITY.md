@@ -21,3 +21,7 @@ No response-time guarantee is made at this early stage, but reports will be asse
 - desktop capability, native-dialog, installer, or file-scope bypasses.
 
 OpenBioFigure treats project files, imported SVGs, metadata, and dependencies as potentially untrusted. See [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) for controls and known limitations.
+
+## Release integrity
+
+Official binaries are rebuilt exclusively on clean GitHub-hosted Actions runners; local build output is never distributed. Releases include SHA-256 checksums, an SPDX SBOM, and Sigstore-backed GitHub artifact attestations. Verification instructions and the current code-signing limitation are documented in [docs/RELEASES.md](docs/RELEASES.md).

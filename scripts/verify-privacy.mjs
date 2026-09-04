@@ -25,6 +25,7 @@ const textExtensions = new Set([
   ".html",
   ".svg",
   ".toml",
+  ".txt",
 ]);
 const home = resolve(homedir()).replaceAll("\\", "/").toLowerCase();
 const localUser = basename(homedir()).toLowerCase();
@@ -35,9 +36,11 @@ const windowsUserPath = new RegExp(
   "gi",
 );
 const unixUserPath = new RegExp(
-  `/` + `(?:Users|home)` + String.raw`/[^\s"'<>/]+`,
+  `/` + `(?:Users|home)` + String.raw`/[A-Za-z0-9._-]+(?:/|\\)`,
   "gi",
 );
+const genericAbsolutePath =
+  /(?<![A-Za-z0-9])(?:[A-Za-z]:[\\/](?!Windows[\\/]|Program Files(?: \(x86\))?[\\/])|\/(?:private\/)?(?:tmp|var\/folders)\/)[^\s"'<>]+/g;
 const findings = [];
 
 async function walk(directory) {
@@ -71,6 +74,12 @@ async function walk(directory) {
         findings.push(`${displayPath}: absolute user path`);
       windowsUserPath.lastIndex = 0;
       unixUserPath.lastIndex = 0;
+      if (
+        displayPath !== join("scripts", "verify-privacy.mjs") &&
+        genericAbsolutePath.test(content)
+      )
+        findings.push(`${displayPath}: absolute local development path`);
+      genericAbsolutePath.lastIndex = 0;
       if (machineName.length > 3 && normalized.includes(machineName))
         findings.push(`${relative(root, path)}: local hostname`);
       const emails =
