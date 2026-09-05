@@ -420,18 +420,26 @@ test("keeps the core local workflow available offline", async ({
       caches: await window.caches.keys(),
     };
   });
-  expect(registrationState, JSON.stringify(registrationState)).toMatchObject({
-    active: "activated",
-    caches: ["openbiofigure-v0.2"],
-  });
+  expect(registrationState.active, JSON.stringify(registrationState)).toBe(
+    "activated",
+  );
+  expect(
+    registrationState.caches,
+    JSON.stringify(registrationState),
+  ).toHaveLength(1);
+  const cacheName = registrationState.caches[0]!;
+  expect(cacheName).toMatch(/^openbiofigure-[a-f0-9]{16}$/);
   await page.reload();
   await expect(page.getByTestId("workspace")).toBeVisible();
-  const offlineState = await page.evaluate(async () => ({
-    controller: navigator.serviceWorker.controller?.scriptURL ?? null,
-    entries: (
-      await (await window.caches.open("openbiofigure-v0.2")).keys()
-    ).map((request) => request.url),
-  }));
+  const offlineState = await page.evaluate(
+    async (currentCacheName) => ({
+      controller: navigator.serviceWorker.controller?.scriptURL ?? null,
+      entries: (await (await window.caches.open(currentCacheName)).keys()).map(
+        (request) => request.url,
+      ),
+    }),
+    cacheName,
+  );
   expect(offlineState, JSON.stringify(offlineState)).toMatchObject({
     controller: expect.stringContaining("/sw.js"),
   });

@@ -1,6 +1,6 @@
 [package]
 name = "openbiofigure"
-version = "0.2.0"
+version = "0.2.1"
 description = "Local-first, attribution-aware scientific figure editor"
 authors = ["Voldigoade"]
 license = "Apache-2.0"

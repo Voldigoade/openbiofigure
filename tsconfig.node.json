@@ -13,7 +13,15 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "types": ["node", "mocha", "@wdio/globals/types"]
   },
-  "include": ["vite.config.ts", "playwright.config.ts", "scripts", "tests/e2e"]
+  "include": [
+    "vite.config.ts",
+    "playwright.config.ts",
+    "wdio.desktop.conf.ts",
+    "scripts",
+    "tests/e2e",
+    "tests/desktop"
+  ]
 }

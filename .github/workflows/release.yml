@@ -104,7 +104,18 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: pnpm install --frozen-lockfile
       - run: node scripts/verify-release-version.mjs
-      - name: Build Windows packages with official Tauri action
+      - name: Build release-mode Tauri application
+        run: pnpm desktop:build:test
+      - name: Smoke test the built Tauri application
+        run: pnpm test:e2e:desktop
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: desktop-test-results
+          path: test-results/desktop/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Package Windows installers with official Tauri action
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

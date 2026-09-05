@@ -109,4 +109,14 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm desktop:check
+      - name: Build release-mode Tauri application
+        run: pnpm desktop:build:test
+      - name: Smoke test the real Tauri application
+        run: pnpm test:e2e:desktop
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: desktop-test-results
+          path: test-results/desktop/
+          if-no-files-found: ignore
+          retention-days: 7
