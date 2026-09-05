@@ -1,5 +1,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
+import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { Plugin } from "vite";
@@ -18,12 +19,18 @@ function offlinePrecacheManifest(): Plugin {
       const outputDirectory = resolve(process.cwd(), options.dir ?? "dist");
       const workerPath = resolve(outputDirectory, "sw.js");
       const template = await readFile(workerPath, "utf8");
+      const cacheRevision = createHash("sha256")
+        .update(JSON.stringify(generatedFiles))
+        .digest("hex")
+        .slice(0, 16);
       await writeFile(
         workerPath,
-        template.replace(
-          '["__OPENBIOFIGURE_PRECACHE__"]',
-          JSON.stringify(generatedFiles),
-        ),
+        template
+          .replace(
+            '["__OPENBIOFIGURE_PRECACHE__"]',
+            JSON.stringify(generatedFiles),
+          )
+          .replace("__OPENBIOFIGURE_CACHE_REVISION__", cacheRevision),
       );
     },
   };
@@ -50,6 +57,6 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
-    exclude: ["tests/e2e/**", "node_modules/**"],
+    exclude: ["tests/e2e/**", "tests/desktop/**", "node_modules/**"],
   },
 });

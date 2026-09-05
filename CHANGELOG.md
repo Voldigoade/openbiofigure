@@ -4,6 +4,19 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-05
+
+### Fixed
+
+- Recover Windows desktop profiles affected by the V0.2.0 service-worker cache, which could leave the packaged application on a white screen after launch.
+- Keep PWA service workers out of the Tauri runtime and clear stale worker registrations and caches without deleting local projects or preferences.
+- Allow the packaged application to fetch bundled scientific SVGs from its own origin while retaining a restrictive network policy.
+
+### Security
+
+- Gate Windows packaging and publication on a real WebdriverIO/Tauri smoke test of the release-mode application.
+- Version web cache namespaces per build and verify that the desktop recovery URL matches the release version.
+
 ## [0.2.0] - 2026-09-05
 
 ### Added

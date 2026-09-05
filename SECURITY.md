@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Security fixes target the current `main` branch and, once published, the latest V0.1 release. Earlier development snapshots are not supported.
+Security fixes target the current `main` branch and the latest published release. Earlier development snapshots are not supported.
 
 ## Report a vulnerability
 

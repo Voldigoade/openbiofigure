@@ -1,4 +1,4 @@
-const CACHE_NAME = "openbiofigure-v0.2";
+const CACHE_NAME = "openbiofigure-__OPENBIOFIGURE_CACHE_REVISION__";
 const PRECACHE_FILES = ["__OPENBIOFIGURE_PRECACHE__"];
 
 async function precacheApplication() {
