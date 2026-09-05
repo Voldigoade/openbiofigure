@@ -69,7 +69,7 @@ jobs:
         with:
           subject-path: openbiofigure-static-${{ github.ref_name }}.tar.gz
           sbom-path: openbiofigure-${{ github.ref_name }}.spdx.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: static-release
           if-no-files-found: error
@@ -108,7 +108,7 @@ jobs:
         run: pnpm desktop:build:test
       - name: Smoke test the built Tauri application
         run: pnpm test:e2e:desktop
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: desktop-test-results
@@ -141,7 +141,7 @@ jobs:
           subject-path: |
             release-assets/*.exe
             release-assets/*.msi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows-release
           if-no-files-found: error
