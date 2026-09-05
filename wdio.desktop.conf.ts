@@ -16,8 +16,6 @@ export const config = {
       browserName: "tauri",
       "tauri:options": {
         application: appBinaryPath,
-      },
-      "ms:edgeOptions": {
         webviewOptions: {
           userDataFolder: webviewUserDataPath,
         },
