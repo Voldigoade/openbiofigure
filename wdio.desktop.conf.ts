@@ -28,6 +28,9 @@ export const config = {
       {
         appBinaryPath,
         driverProvider: "external",
+        env: {
+          WEBVIEW2_USER_DATA_FOLDER: webviewUserDataPath,
+        },
         autoInstallTauriDriver: true,
         autoDownloadEdgeDriver: true,
         captureBackendLogs: false,
