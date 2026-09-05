@@ -73,7 +73,7 @@
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.42.0",
     "vite": "^7.1.4",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.10",
     "webdriverio": "9.29.1",
     "yaml": "^2.8.1"
   }
