@@ -16,7 +16,7 @@
     "desktop:dev": "tauri dev",
     "desktop:check": "cargo check --manifest-path src-tauri/Cargo.toml",
     "desktop:build": "tauri build",
-    "desktop:build:test": "tauri build --no-bundle --ci",
+    "desktop:build:test": "tauri build --no-bundle --ci --features desktop-e2e",
     "test:e2e:desktop": "wdio run wdio.desktop.conf.ts",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",

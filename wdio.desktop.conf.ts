@@ -1,12 +1,9 @@
-import { rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { browser } from "@wdio/globals";
 
 const appBinaryPath =
   process.env.OPENBIOFIGURE_DESKTOP_BINARY ??
   resolve("src-tauri/target/release/openbiofigure.exe");
-const webviewUserDataPath = resolve("test-results/desktop/webview-user-data");
-
 export const config = {
   runner: "local",
   specs: ["./tests/desktop/**/*.spec.ts"],
@@ -16,9 +13,6 @@ export const config = {
       browserName: "tauri",
       "tauri:options": {
         application: appBinaryPath,
-        webviewOptions: {
-          userDataFolder: webviewUserDataPath,
-        },
       },
     },
   ],
@@ -27,12 +21,7 @@ export const config = {
       "@wdio/tauri-service",
       {
         appBinaryPath,
-        driverProvider: "external",
-        env: {
-          WEBVIEW2_USER_DATA_FOLDER: webviewUserDataPath,
-        },
-        autoInstallTauriDriver: true,
-        autoDownloadEdgeDriver: true,
+        driverProvider: "embedded",
         captureBackendLogs: false,
         // Frontend log capture requires the optional WebdriverIO Tauri plugin to
         // be embedded in the application. Release builds intentionally omit it.
@@ -53,12 +42,6 @@ export const config = {
   mochaOpts: {
     ui: "bdd",
     timeout: 120_000,
-  },
-  onPrepare: () => {
-    rmSync(webviewUserDataPath, { force: true, recursive: true });
-  },
-  onComplete: () => {
-    rmSync(webviewUserDataPath, { force: true, recursive: true });
   },
   afterTest: async (
     _test: unknown,

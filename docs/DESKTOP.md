@@ -14,6 +14,10 @@ pnpm desktop:build:test
 pnpm test:e2e:desktop
 ```
 
+`desktop:build:test` enables a test-only embedded WebDriver feature. The
+production package is rebuilt without that feature after the native smoke test
+passes.
+
 ## Packaging
 
 ```bash
