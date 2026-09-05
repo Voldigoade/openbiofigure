@@ -79,7 +79,13 @@ jobs:
           # affects VariantStrIter APIs that OpenBioFigure does not call, and
           # the Windows release target does not ship this Linux-only crate.
           # Remove this exception as soon as upstream Tauri moves to glib 0.20+.
-          allow-ghsas: GHSA-wrw7-89jp-8q8g
+          # The additional advisories are confined to the pinned native-test
+          # toolchain. extract-zip only fetches a matching EdgeDriver,
+          # deepmerge-ts only merges our trusted repository-owned WDIO config,
+          # and serialize-javascript belongs to Mocha's reporter dependency.
+          # None is bundled into OpenBioFigure. The registry currently provides
+          # no compatible patched graph for this Tauri service stack.
+          allow-ghsas: GHSA-wrw7-89jp-8q8g, GHSA-jmr9-qjv8-65gv, GHSA-ggr8-5vv4-36mx, GHSA-5c6j-r48x-rmvq, GHSA-qj8w-gfj5-8c6v
 
   secrets:
     runs-on: ubuntu-latest
