@@ -1,15 +1,25 @@
-import { Check, FileDown, Link2 } from "lucide-react";
+import { Check, ClipboardCheck, FileDown, Link2 } from "lucide-react";
 import { useMemo } from "react";
 import { generateAttributions } from "../../domain/licensing/attribution";
 import type { OpenBioFigureProject } from "../../domain/project/schema";
+import { checkPublicationReadiness } from "../../domain/publication/preflight";
 
 interface LicensingPanelProps {
   project: OpenBioFigureProject;
   onDownload: (format: "markdown" | "text") => void;
+  onDownloadReport: () => void;
 }
 
-export function LicensingPanel({ project, onDownload }: LicensingPanelProps) {
+export function LicensingPanel({
+  project,
+  onDownload,
+  onDownloadReport,
+}: LicensingPanelProps) {
   const result = useMemo(() => generateAttributions(project), [project]);
+  const preflight = useMemo(
+    () => checkPublicationReadiness(project),
+    [project],
+  );
   const check = result.check;
 
   return (
@@ -40,6 +50,22 @@ export function LicensingPanel({ project, onDownload }: LicensingPanelProps) {
         ))}
         {!check.usedAssetCount && <li>No scientific asset is used yet.</li>}
       </ul>
+      <section className="preflight-checks" aria-labelledby="preflight-title">
+        <div className="section-title">
+          <h3 id="preflight-title">Figure preflight</h3>
+          <span>{preflight.ready ? "Ready" : "Review"}</span>
+        </div>
+        <ul className="check-list">
+          {preflight.checks.map((item) => (
+            <li
+              className={item.level === "pass" ? undefined : "warning-row"}
+              key={item.message}
+            >
+              {item.level === "pass" ? <Check /> : "!"} {item.message}
+            </li>
+          ))}
+        </ul>
+      </section>
       {check.assets.map((asset) => (
         <article className="credit-card" key={asset.id}>
           <div>
@@ -56,6 +82,13 @@ export function LicensingPanel({ project, onDownload }: LicensingPanelProps) {
         </article>
       ))}
       <div className="attribution-actions">
+        <button
+          type="button"
+          className="button secondary"
+          onClick={onDownloadReport}
+        >
+          <ClipboardCheck /> Publication report
+        </button>
         <button
           type="button"
           className="button secondary"

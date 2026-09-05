@@ -16,6 +16,7 @@ const shortcuts = [
   ["Duplicate", "Ctrl D"],
   ["Group / ungroup", "Ctrl G / Ctrl Shift G"],
   ["Delete selection", "Delete"],
+  ["Nudge selection", "Arrow keys / Shift 10 px"],
   ["Pan canvas", "Hold Space"],
   ["Fit to screen", "0"],
 ] as const;

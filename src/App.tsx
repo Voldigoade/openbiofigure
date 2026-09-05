@@ -2,6 +2,8 @@ import {
   type ChangeEvent,
   type DragEvent,
   type PointerEvent as ReactPointerEvent,
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useRef,
@@ -15,12 +17,20 @@ import { SettingsScreen } from "./app/SettingsScreen";
 import { StartScreen } from "./app/StartScreen";
 import { WorkspaceCanvas } from "./app/WorkspaceCanvas";
 import type { InspectorTab, PendingSvg, SaveState } from "./app/types";
-import { seedCatalog, seedProvider } from "./assets/catalog";
+import { seedProvider } from "./assets/provider";
 import { NewDocumentDialog } from "./components/dialogs/NewDocumentDialog";
+import { ChartDialog } from "./components/dialogs/ChartDialog";
 import { KeyboardShortcutsDialog } from "./components/dialogs/KeyboardShortcutsDialog";
 import { SvgMetadataDialog } from "./components/dialogs/SvgMetadataDialog";
 import { sanitizeSvg } from "./domain/assets/sanitize";
 import type { AssetMetadata } from "./domain/assets/schema";
+import { createChartObject } from "./domain/charts/chart";
+import {
+  assetLibraryChangeEvent,
+  loadAssetLibraryState,
+  recordRecentAsset,
+  saveAssetLibraryState,
+} from "./domain/assets/libraryState";
 import {
   buildProjectJson,
   buildSvgExport,
@@ -35,6 +45,8 @@ import { createProject } from "./domain/project/factory";
 import { ProjectHistory } from "./domain/project/history";
 import { migrateProject } from "./domain/project/migrations";
 import type { OpenBioFigureProject } from "./domain/project/schema";
+import { createTemplateProject } from "./domain/templates/templates";
+import { buildPublicationReport } from "./domain/publication/preflight";
 import {
   IndexedDbProjectStorage,
   type RecentProject,
@@ -44,7 +56,6 @@ import {
   type LayerSnapshot,
   type SelectionSnapshot,
 } from "./editor/FabricEditor";
-import { AssetsPanel } from "./features/assets/AssetsPanel";
 import { DEFAULT_ASSET_FILTERS } from "./features/assets/filters";
 import { messages, type Locale } from "./i18n/messages";
 import {
@@ -57,6 +68,9 @@ import {
 
 const storage = new IndexedDbProjectStorage();
 const ACTIVE_SESSION_KEY = "openbiofigure:active-editor";
+const AssetsPanel = lazy(async () => ({
+  default: (await import("./features/assets/AssetsPanel")).AssetsPanel,
+}));
 
 type AppView = "home" | "editor" | "settings";
 
@@ -84,6 +98,19 @@ function loadPreferences(): AppPreferences {
   }
 }
 
+function rememberAssetUse(assetId: string) {
+  try {
+    const state = loadAssetLibraryState(window.localStorage);
+    saveAssetLibraryState(
+      window.localStorage,
+      recordRecentAsset(state, assetId),
+    );
+    window.dispatchEvent(new Event(assetLibraryChangeEvent));
+  } catch {
+    // Asset placement must not depend on local-storage availability.
+  }
+}
+
 export function App() {
   const [project, setProject] = useState(() => createProject("journal"));
   const [view, setView] = useState<AppView>("home");
@@ -103,6 +130,7 @@ export function App() {
   const [newDialog, setNewDialog] = useState(false);
   const [pendingSvg, setPendingSvg] = useState<PendingSvg | null>(null);
   const [shortcutsDialog, setShortcutsDialog] = useState(false);
+  const [chartDialog, setChartDialog] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [exportScale, setExportScale] = useState(2);
   const [notice, setNotice] = useState<string | null>(null);
@@ -327,6 +355,26 @@ export function App() {
       } else if (event.key === "Delete" || event.key === "Backspace") {
         event.preventDefault();
         editor.deleteSelection();
+      } else if (
+        event.key === "ArrowLeft" ||
+        event.key === "ArrowRight" ||
+        event.key === "ArrowUp" ||
+        event.key === "ArrowDown"
+      ) {
+        event.preventDefault();
+        const distance = event.shiftKey ? 10 : 1;
+        editor.nudgeSelection(
+          event.key === "ArrowLeft"
+            ? -distance
+            : event.key === "ArrowRight"
+              ? distance
+              : 0,
+          event.key === "ArrowUp"
+            ? -distance
+            : event.key === "ArrowDown"
+              ? distance
+              : 0,
+        );
       } else if (event.key === "0") {
         fitToScreen();
       } else if (event.code === "Space") setPanning(true);
@@ -358,21 +406,22 @@ export function App() {
         { ...metadata, svg, verified: true },
         point,
       );
+      rememberAssetUse(asset.id);
       setTab("licensing");
     },
     [],
   );
 
-  const handleDrop = (event: DragEvent) => {
+  const handleDrop = async (event: DragEvent) => {
     event.preventDefault();
     const id = event.dataTransfer.getData("application/x-openbiofigure-asset");
-    const asset = seedCatalog.find((item) => item.id === id);
+    const asset = await seedProvider.find(id);
     if (!asset) return;
     const canvas = document
       .querySelector(".canvas-container")
       ?.getBoundingClientRect();
     if (!canvas) return;
-    void addAsset(asset, {
+    await addAsset(asset, {
       x: (event.clientX - canvas.left) / zoom,
       y: (event.clientY - canvas.top) / zoom,
     });
@@ -454,6 +503,16 @@ export function App() {
         filename,
       );
     }
+  };
+  const exportPublicationReport = async () => {
+    const contents = buildPublicationReport(project);
+    const filename = `${safeFileStem(project.metadata.title)}-publication-report.md`;
+    if (
+      !(await saveDesktopTextFile(contents, filename, [
+        { name: "Markdown", extensions: ["md"] },
+      ]))
+    )
+      makeDownload(contents, "text/markdown", filename);
   };
 
   const openDesktopProject = async () => {
@@ -614,6 +673,21 @@ export function App() {
       {shortcutsDialog && (
         <KeyboardShortcutsDialog onClose={() => setShortcutsDialog(false)} />
       )}
+      {chartDialog && (
+        <ChartDialog
+          onClose={() => setChartDialog(false)}
+          onCreate={async (spec) => {
+            await editorRef.current?.addProjectObject(
+              createChartObject(
+                spec,
+                project.document.width / 2,
+                project.document.height / 2,
+              ),
+            );
+            setChartDialog(false);
+          }}
+        />
+      )}
       {notice && (
         <div className="toast" role="status">
           {notice}
@@ -646,8 +720,10 @@ export function App() {
           onRemoveRecent={(projectId) => {
             void storage.removeRecent(projectId).then(refreshRecent);
           }}
-          onCreatePreset={(preset) =>
-            void activateProject(applyPreferences(createProject(preset)))
+          onCreateTemplate={(templateId) =>
+            void activateProject(
+              applyPreferences(createTemplateProject(templateId)),
+            )
           }
           onSettings={() => openSettings("home")}
         />
@@ -748,23 +824,36 @@ export function App() {
       />
 
       <div className="editor-grid">
-        <AssetsPanel
-          locale={locale}
-          filters={filters}
-          setFilters={setFilters}
-          onAdd={(asset) => void addAsset(asset)}
-          onFile={(event) => void handleSvgFile(event)}
-          onRequestFile={
-            isDesktopRuntime() ? () => void importDesktopSvg() : undefined
+        <Suspense
+          fallback={
+            <aside className="left-panel panel-loading" aria-busy="true">
+              <p className="eyebrow">{localized.assets}</p>
+              <p>Loading verified catalog…</p>
+            </aside>
           }
-        />
+        >
+          <AssetsPanel
+            locale={locale}
+            filters={filters}
+            setFilters={setFilters}
+            onAdd={addAsset}
+            onInsertScientific={(kind) =>
+              editorRef.current?.addScientificElement(kind)
+            }
+            onCreateChart={() => setChartDialog(true)}
+            onFile={(event) => void handleSvgFile(event)}
+            onRequestFile={
+              isDesktopRuntime() ? () => void importDesktopSvg() : undefined
+            }
+          />
+        </Suspense>
         <WorkspaceCanvas
           project={project}
           zoom={zoom}
           panning={panning}
           canvasRef={canvasRef}
           workspaceRef={workspaceRef}
-          onDrop={handleDrop}
+          onDrop={(event) => void handleDrop(event)}
           onPanStart={onPanStart}
           onPanMove={onPanMove}
           onPanEnd={() => {
@@ -787,6 +876,7 @@ export function App() {
           getEditor={() => editorRef.current}
           onTabChange={setTab}
           onExportAttributions={(format) => void exportAttributions(format)}
+          onExportPublicationReport={() => void exportPublicationReport()}
         />
       </div>
 

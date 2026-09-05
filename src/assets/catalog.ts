@@ -2,7 +2,6 @@ import rawCatalog from "../../packages/assets/catalog.json";
 import {
   assetMetadataSchema,
   type AssetMetadata,
-  type AssetProvider,
 } from "../domain/assets/schema";
 
 const svgModules = import.meta.glob<string>("../../packages/assets/svg/*.svg", {
@@ -31,18 +30,3 @@ export async function getSeedSvg(asset: AssetMetadata): Promise<string> {
 }
 
 export const seedCatalog = assetMetadataSchema.array().parse(rawCatalog);
-
-export class VerifiedSeedProvider implements AssetProvider {
-  readonly id = "verified-seed";
-  readonly label = "Verified seed catalog";
-
-  list(): Promise<AssetMetadata[]> {
-    return Promise.resolve(seedCatalog);
-  }
-
-  loadSvg(asset: AssetMetadata): Promise<string> {
-    return getSeedSvg(asset);
-  }
-}
-
-export const seedProvider = new VerifiedSeedProvider();

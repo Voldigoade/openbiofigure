@@ -15,6 +15,31 @@ const normalize = (value: string) =>
     .toLocaleLowerCase("en")
     .trim();
 
+const collator = new Intl.Collator("en", { sensitivity: "base" });
+
+function relevance(asset: AssetMetadata, terms: string[]): number {
+  if (!terms.length) return 0;
+
+  const title = normalize(asset.title);
+  const description = normalize(asset.description);
+  const category = normalize(asset.category);
+  const provider = normalize(asset.source.provider);
+  const keywords = asset.keywords.map(normalize);
+
+  return terms.reduce((score, term) => {
+    if (title === term) return score;
+    if (title.startsWith(term)) return score + 10;
+    if (title.includes(term)) return score + 20;
+    if (keywords.includes(term)) return score + 30;
+    if (keywords.some((keyword) => keyword.startsWith(term))) return score + 40;
+    if (keywords.some((keyword) => keyword.includes(term))) return score + 50;
+    if (category.includes(term)) return score + 60;
+    if (provider.includes(term)) return score + 70;
+    if (description.includes(term)) return score + 80;
+    return score + 100;
+  }, 0);
+}
+
 export function searchAssets(
   assets: AssetMetadata[],
   filters: AssetFilters,
@@ -22,7 +47,7 @@ export function searchAssets(
   const query = normalize(filters.query);
   const terms = query.split(/\s+/).filter(Boolean);
 
-  return assets.filter((asset) => {
+  const matches = assets.filter((asset) => {
     const haystack = normalize(
       [
         asset.title,
@@ -52,5 +77,12 @@ export function searchAssets(
       matchesLicense &&
       matchesAttribution
     );
+  });
+
+  if (!terms.length) return matches;
+
+  return [...matches].sort((left, right) => {
+    const score = relevance(left, terms) - relevance(right, terms);
+    return score || collator.compare(left.title, right.title);
   });
 }

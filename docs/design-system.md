@@ -10,9 +10,9 @@ colors:
   text: "#263238"
   text-muted: "#5d6b70"
   border: "#d5dde0"
-  primary: "#087f8c"
+  primary: "#066f79"
   primary-soft: "#dff4f5"
-  selection: "#087f8c"
+  selection: "#066f79"
   success: "#26734d"
   warning: "#9a5c00"
   danger: "#b33a3a"
@@ -34,12 +34,50 @@ spacing:
   panel-padding: "0.875rem"
   section-gap: "1rem"
 components:
-  toolbar: {}
-  panel: {}
-  button: {}
-  field: {}
-  status-bar: {}
-  dialog: {}
+  toolbar:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.text}"
+    height: "52px"
+  panel:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.text}"
+    padding: "{spacing.panel-padding}"
+  workspace:
+    backgroundColor: "{colors.workspace}"
+    textColor: "{colors.text}"
+  raised-control:
+    backgroundColor: "{colors.surface-strong}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.sm}"
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.canvas}"
+    rounded: "{rounded.sm}"
+  button-selected:
+    backgroundColor: "{colors.primary-soft}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.sm}"
+  selection:
+    backgroundColor: "{colors.selection}"
+    textColor: "{colors.canvas}"
+  muted-copy:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.text-muted}"
+  separator:
+    backgroundColor: "{colors.border}"
+    textColor: "{colors.text}"
+  success-state:
+    backgroundColor: "{colors.success}"
+    textColor: "{colors.canvas}"
+  warning-state:
+    backgroundColor: "{colors.warning}"
+    textColor: "{colors.canvas}"
+  danger-state:
+    backgroundColor: "{colors.danger}"
+    textColor: "{colors.canvas}"
+  focus-state:
+    backgroundColor: "{colors.focus}"
+    textColor: "{colors.text}"
 ---
 
 # OpenBioFigure Design System
@@ -71,7 +109,7 @@ The compact humanist UI stack supports dense controls at 12–14px. Document tex
 
 ## Layout
 
-The product has three predictable surfaces: Home, Editor, and Settings. Home prioritizes New figure and Open project, then blank templates and local recents. The desktop editor uses a 30px application menu, 52px tool bar, 260px asset panel, flexible workspace, 300px inspector, and 30px status bar. Tablet panels contract before controls wrap. Below 720px, the full editor is replaced by an honest small-screen notice. Home and Settings remain usable at narrower widths. Scroll ownership belongs to each panel, the central workspace, or the active full-page surface—never two nested viewport owners.
+The product has three predictable surfaces: Home, Editor, and Settings. Home prioritizes New figure and Open project, then editable scientific templates and local recents. The desktop editor uses a compact application menu and tool bar, a 278px asset panel, flexible workspace, 320px inspector, and status bar. Tablet panels contract before controls wrap. Below 720px, the full editor is replaced by an honest small-screen notice. Home and Settings remain usable at narrower widths. Scroll ownership belongs to each panel, the central workspace, or the active full-page surface—never two nested viewport owners.
 
 ## Elevation & Depth
 
@@ -93,7 +131,7 @@ Buttons combine emphasis and intent. Export actions use teal-accented outlines; 
 
 ### Navigation and data display
 
-Panels are open rails rather than cards. Assets use a compact two-column catalogue; layers use full-width rows with visible selection, eye, lock, and reorder alternatives. The status bar reports local save state, zoom, and provenance completeness.
+Panels are open rails rather than cards. Assets use compact full-width rows with an independent scroll region; layers use full-width rows with visible selection, eye, lock, and reorder alternatives. The status bar reports local save state, selection, and provenance completeness.
 
 ### Forms and overlays
 

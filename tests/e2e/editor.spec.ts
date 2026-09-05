@@ -48,9 +48,21 @@ test("first run presents clear local-first start actions", async ({ page }) => {
     page.getByRole("button", { name: "Open project" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Blank templates" }),
+    page.getByRole("heading", { name: "Figure templates" }),
   ).toBeVisible();
   await expect(page.getByText("No recent projects yet")).toBeVisible();
+});
+
+test("starts from a structured, editable scientific template", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /Experimental workflow/ }).click();
+  await expect(page.getByTestId("workspace")).toBeVisible();
+  expect(await layerCount(page)).toBeGreaterThan(10);
+  await expect(page.locator(".title-field input")).toHaveValue(
+    "Experimental workflow",
+  );
 });
 
 test("returns to a recent local project from Home", async ({ page }) => {
@@ -134,6 +146,66 @@ test("search an asset, add it, and inspect provenance", async ({ page }) => {
   await expect(
     page.getByRole("link", { name: "Original source" }),
   ).toHaveAttribute("href", /bioicons/);
+});
+
+test("keeps favorite and recent scientific assets available locally", async ({
+  page,
+}) => {
+  await openEditor(page);
+  await page.getByLabel("Search scientific assets").fill("mitochondria");
+  await page
+    .getByRole("button", { name: "Favorite asset: Mitochondrion" })
+    .click();
+  await page
+    .locator(".asset-scopes")
+    .getByRole("button", { name: "Favorites" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Add to canvas: Mitochondrion" }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Add to canvas: Mitochondrion" })
+    .click();
+  await page
+    .locator(".asset-scopes")
+    .getByRole("button", { name: "Recent" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Add to canvas: Mitochondrion" }),
+  ).toBeVisible();
+});
+
+test("adds editable scientific motifs, panels, and precise dimensions", async ({
+  page,
+}) => {
+  await openEditor(page);
+  await page.locator("details.science-tools summary").click();
+  await page.getByTestId("add-scientific-cell").click();
+  await expect(page.getByLabel("Layer name")).toHaveValue("Editable cell");
+  await page.getByLabel("W", { exact: true }).fill("320");
+  await expect(page.getByLabel("W", { exact: true })).toHaveValue("320");
+  await page.keyboard.press("Shift+ArrowRight");
+  await page.getByTestId("add-scientific-panel").click();
+  expect(await layerCount(page)).toBe(2);
+});
+
+test("creates an editable chart and exports a publication report", async ({
+  page,
+}) => {
+  await openEditor(page);
+  await page.locator("details.science-tools summary").click();
+  await page.getByTestId("create-chart").click();
+  await page.getByRole("button", { name: "Line chart" }).click();
+  await page.getByRole("button", { name: "Create chart" }).click();
+  await expect(page.getByLabel("Layer name")).toHaveValue("Line chart");
+  await page.getByRole("tab", { name: /License/ }).click();
+  await expect(page.getByText("Figure preflight")).toBeVisible();
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Publication report" }).click();
+  const report = await downloadPromise;
+  expect(await readFile(await report.path(), "utf8")).toContain(
+    "Preflight: ready",
+  );
 });
 
 test("undo and redo an editor change", async ({ page }) => {

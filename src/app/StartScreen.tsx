@@ -6,8 +6,8 @@ import {
   Trash2,
 } from "lucide-react";
 import type { RecentProject } from "../domain/storage/projectStorage";
-import type { DocumentPreset } from "../domain/project/factory";
-import { DOCUMENT_PRESETS } from "../domain/project/factory";
+import type { FigureTemplateId } from "../domain/templates/templates";
+import { FIGURE_TEMPLATES } from "../domain/templates/templates";
 import { Brand } from "./Brand";
 
 interface StartScreenProps {
@@ -18,15 +18,9 @@ interface StartScreenProps {
   onContinue: () => void;
   onOpenRecent: (project: RecentProject["project"]) => void;
   onRemoveRecent: (projectId: string) => void;
-  onCreatePreset: (preset: DocumentPreset) => void;
+  onCreateTemplate: (templateId: FigureTemplateId) => void;
   onSettings: () => void;
 }
-
-const templatePresets: (keyof typeof DOCUMENT_PRESETS)[] = [
-  "journal",
-  "widescreen",
-  "square",
-];
 
 function projectDimensions(project: RecentProject["project"]) {
   return `${project.document.width} × ${project.document.height} px · ${project.objects.length} object${project.objects.length === 1 ? "" : "s"}`;
@@ -40,7 +34,7 @@ export function StartScreen({
   onContinue,
   onOpenRecent,
   onRemoveRecent,
-  onCreatePreset,
+  onCreateTemplate,
   onSettings,
 }: StartScreenProps) {
   return (
@@ -96,33 +90,34 @@ export function StartScreen({
           <div className="section-heading">
             <div>
               <p className="eyebrow">Quick start</p>
-              <h2 id="templates-title">Blank templates</h2>
+              <h2 id="templates-title">Figure templates</h2>
             </div>
             <span>Fully editable</span>
           </div>
           <div className="start-template-grid">
-            {templatePresets.map((preset) => {
-              const template = DOCUMENT_PRESETS[preset];
-              return (
-                <button
-                  className="start-template"
-                  type="button"
-                  onClick={() => onCreatePreset(preset)}
-                  key={preset}
+            {FIGURE_TEMPLATES.map((template) => (
+              <button
+                className="start-template"
+                type="button"
+                onClick={() => onCreateTemplate(template.id)}
+                key={template.id}
+              >
+                <span
+                  className={`start-template-preview template-${template.preview}`}
+                  style={{
+                    aspectRatio: `${template.width}/${template.height}`,
+                  }}
+                  aria-hidden="true"
                 >
-                  <span
-                    className="start-template-preview"
-                    style={{
-                      aspectRatio: `${template.width}/${template.height}`,
-                    }}
-                  />
-                  <strong>{template.label}</strong>
-                  <small>
-                    {template.width} × {template.height} px
-                  </small>
-                </button>
-              );
-            })}
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <strong>{template.title}</strong>
+                <small>{template.description}</small>
+              </button>
+            ))}
           </div>
         </section>
 

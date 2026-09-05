@@ -1,20 +1,52 @@
-import { ChevronDown, FilePlus2, Search, Upload, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import {
+  ChevronDown,
+  BarChart3,
+  CircleDotDashed,
+  Clock3,
+  Dna,
+  FilePlus2,
+  Library,
+  PanelTop,
+  Ruler,
+  Search,
+  Star,
+  Upload,
+  Waves,
+  X,
+} from "lucide-react";
+import {
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import { getSeedAssetUrl, seedCatalog } from "../../assets/catalog";
 import { FormField } from "../../components/ui/FormField";
 import { IconButton } from "../../components/ui/IconButton";
+import {
+  assetLibraryChangeEvent,
+  loadAssetLibraryState,
+  saveAssetLibraryState,
+  toggleFavorite,
+} from "../../domain/assets/libraryState";
 import { searchAssets, type AssetFilters } from "../../domain/assets/search";
 import type { AssetMetadata } from "../../domain/assets/schema";
+import type { ScientificElementKind } from "../../domain/scientific/elements";
 import { t, type Locale } from "../../i18n/messages";
 import { DEFAULT_ASSET_FILTERS } from "./filters";
 
 const RESULT_PAGE_SIZE = 48;
+type AssetScope = "all" | "favorites" | "recent";
 
 interface AssetsPanelProps {
   locale: Locale;
   filters: AssetFilters;
   setFilters: (filters: AssetFilters) => void;
-  onAdd: (asset: AssetMetadata) => void;
+  onAdd: (asset: AssetMetadata) => void | Promise<void>;
+  onInsertScientific: (kind: ScientificElementKind) => void | Promise<void>;
+  onCreateChart: () => void;
   onFile: (event: ChangeEvent<HTMLInputElement>) => void;
   onRequestFile?: () => void;
 }
@@ -24,13 +56,33 @@ export function AssetsPanel({
   filters,
   setFilters,
   onAdd,
+  onInsertScientific,
+  onCreateChart,
   onFile,
   onRequestFile,
 }: AssetsPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [scope, setScope] = useState<AssetScope>("all");
   const [visibleCount, setVisibleCount] = useState(RESULT_PAGE_SIZE);
-  const results = useMemo(() => searchAssets(seedCatalog, filters), [filters]);
+  const [libraryState, setLibraryState] = useState(() =>
+    loadAssetLibraryState(window.localStorage),
+  );
+  const deferredFilters = useDeferredValue(filters);
+  const scopedAssets = useMemo(() => {
+    if (scope === "all") return seedCatalog;
+    const ids =
+      scope === "favorites" ? libraryState.favorites : libraryState.recent;
+    const byId = new Map(seedCatalog.map((asset) => [asset.id, asset]));
+    return ids.flatMap((id) => {
+      const asset = byId.get(id);
+      return asset ? [asset] : [];
+    });
+  }, [libraryState, scope]);
+  const results = useMemo(
+    () => searchAssets(scopedAssets, deferredFilters),
+    [deferredFilters, scopedAssets],
+  );
   const visibleResults = results.slice(0, visibleCount);
   const categories = [
     ...new Set(seedCatalog.map((asset) => asset.category)),
@@ -42,7 +94,32 @@ export function AssetsPanel({
     ...new Set(seedCatalog.map((asset) => asset.license.id)),
   ].sort((left, right) => left.localeCompare(right));
 
-  useEffect(() => setVisibleCount(RESULT_PAGE_SIZE), [filters]);
+  useEffect(() => setVisibleCount(RESULT_PAGE_SIZE), [deferredFilters, scope]);
+
+  useEffect(() => {
+    const syncLibraryState = () =>
+      setLibraryState(loadAssetLibraryState(window.localStorage));
+    window.addEventListener("storage", syncLibraryState);
+    window.addEventListener(assetLibraryChangeEvent, syncLibraryState);
+    return () => {
+      window.removeEventListener("storage", syncLibraryState);
+      window.removeEventListener(assetLibraryChangeEvent, syncLibraryState);
+    };
+  }, []);
+
+  const updateFavorite = (assetId: string) => {
+    try {
+      const next = saveAssetLibraryState(
+        window.localStorage,
+        toggleFavorite(libraryState, assetId),
+      );
+      setLibraryState(next);
+      window.dispatchEvent(new Event(assetLibraryChangeEvent));
+    } catch {
+      // Browsers can deny local storage in hardened privacy modes. The catalog
+      // remains usable even when personal library state cannot be persisted.
+    }
+  };
 
   useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
@@ -91,6 +168,63 @@ export function AssetsPanel({
           </IconButton>
         )}
       </div>
+      <div className="asset-scopes" aria-label={t(locale, "assetViews")}>
+        {(
+          [
+            ["all", Library, t(locale, "allAssets")],
+            ["favorites", Star, t(locale, "favorites")],
+            ["recent", Clock3, t(locale, "recentAssets")],
+          ] as const
+        ).map(([value, Icon, label]) => (
+          <button
+            type="button"
+            key={value}
+            className={scope === value ? "active" : undefined}
+            aria-pressed={scope === value}
+            onClick={() => setScope(value)}
+          >
+            <Icon aria-hidden="true" />
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
+      <details className="science-tools">
+        <summary>
+          <span>{t(locale, "scientificDrawing")}</span>
+          <ChevronDown aria-hidden="true" />
+        </summary>
+        <div className="science-tool-grid">
+          {(
+            [
+              ["cell", CircleDotDashed, "Cell"],
+              ["membrane", Waves, "Membrane"],
+              ["dna", Dna, "DNA"],
+              ["panel", PanelTop, "Panel"],
+              ["scale-bar", Ruler, "Scale bar"],
+            ] as const
+          ).map(([kind, Icon, label]) => (
+            <button
+              type="button"
+              key={kind}
+              title={`Add editable ${label.toLocaleLowerCase("en")}`}
+              onClick={() => void onInsertScientific(kind)}
+              data-testid={`add-scientific-${kind}`}
+            >
+              <Icon aria-hidden="true" />
+              <span>{label}</span>
+            </button>
+          ))}
+          <button
+            type="button"
+            title="Create an editable chart"
+            onClick={onCreateChart}
+            data-testid="create-chart"
+          >
+            <BarChart3 aria-hidden="true" />
+            <span>Chart</span>
+          </button>
+        </div>
+      </details>
       <details className="filters">
         <summary>
           <span>{t(locale, "filters")}</span>
@@ -154,7 +288,11 @@ export function AssetsPanel({
           </FormField>
         </div>
       </details>
-      <div className="asset-results" aria-live="polite">
+      <div
+        className="asset-results"
+        aria-live="polite"
+        aria-busy={deferredFilters !== filters}
+      >
         <p className="asset-result-summary">
           {results.length} {t(locale, "results")}
         </p>
@@ -170,7 +308,7 @@ export function AssetsPanel({
                 asset.id,
               );
             }}
-            onDoubleClick={() => onAdd(asset)}
+            onDoubleClick={() => void onAdd(asset)}
           >
             <div className="asset-thumb" aria-hidden="true">
               <img src={getSeedAssetUrl(asset)} alt="" loading="lazy" />
@@ -183,21 +321,39 @@ export function AssetsPanel({
                 {asset.license.attributionRequired ? " · credit" : ""}
               </small>
             </div>
-            <button
-              type="button"
-              className="asset-add"
-              onClick={() => onAdd(asset)}
-              aria-label={`${t(locale, "addToCanvas")}: ${asset.title}`}
-              title={t(locale, "addToCanvas")}
-            >
-              <FilePlus2 />
-            </button>
+            <div className="asset-actions">
+              <button
+                type="button"
+                className={`asset-favorite${libraryState.favorites.includes(asset.id) ? " active" : ""}`}
+                onClick={() => updateFavorite(asset.id)}
+                aria-pressed={libraryState.favorites.includes(asset.id)}
+                aria-label={`${t(locale, "favoriteAsset")}: ${asset.title}`}
+                title={t(locale, "favoriteAsset")}
+              >
+                <Star />
+              </button>
+              <button
+                type="button"
+                className="asset-add"
+                onClick={() => void onAdd(asset)}
+                aria-label={`${t(locale, "addToCanvas")}: ${asset.title}`}
+                title={t(locale, "addToCanvas")}
+              >
+                <FilePlus2 />
+              </button>
+            </div>
           </article>
         ))}
         {!results.length && (
           <div className="empty-state">
             <Search />
-            <p>{t(locale, "noResults")}</p>
+            <p>
+              {scope === "favorites"
+                ? t(locale, "noFavoriteAssets")
+                : scope === "recent"
+                  ? t(locale, "noRecentAssets")
+                  : t(locale, "noResults")}
+            </p>
             <button
               type="button"
               className="text-button"

@@ -15,14 +15,16 @@
 
 ## Canonical UI Map
 
-| Capability     | Canonical owner     | Source of truth                  | Allowed variants                      | Verification          |
-| -------------- | ------------------- | -------------------------------- | ------------------------------------- | --------------------- |
-| Select/Listbox | Browser native      | `src/App.tsx`                    | finite native select                  | keyboard + E2E        |
-| Form           | SVG metadata dialog | `src/App.tsx`                    | import metadata                       | custom validation E2E |
-| Scrollbar      | Browser native      | `src/styles.css`                 | workspace / panel internal            | responsive E2E        |
-| Toast          | App status toast    | `src/App.tsx`                    | success / warning / error             | live region + E2E     |
-| Start screen   | Home                | `src/app/StartScreen.tsx`        | new / open / recent / blank templates | first-run E2E         |
-| App menu       | Editor menu bar     | `src/app/ApplicationMenuBar.tsx` | File / Edit / View / Help             | keyboard + E2E        |
+| Capability     | Canonical owner     | Source of truth                          | Allowed variants                       | Verification          |
+| -------------- | ------------------- | ---------------------------------------- | -------------------------------------- | --------------------- |
+| Select/Listbox | Browser native      | `src/App.tsx`                            | finite native select                   | keyboard + E2E        |
+| Form           | SVG metadata dialog | `src/App.tsx`                            | import metadata                        | custom validation E2E |
+| Scrollbar      | Browser native      | `src/styles.css`                         | workspace / panel internal             | responsive E2E        |
+| Toast          | App status toast    | `src/App.tsx`                            | success / warning / error              | live region + E2E     |
+| Start screen   | Home                | `src/app/StartScreen.tsx`                | new / open / recent / figure templates | first-run E2E         |
+| App menu       | Editor menu bar     | `src/app/ApplicationMenuBar.tsx`         | File / Edit / View / Help              | keyboard + E2E        |
+| Chart form     | Chart dialog        | `src/components/dialogs/ChartDialog.tsx` | bar / line with validated local data   | unit + E2E            |
+| Asset views    | Asset panel         | `src/features/assets/AssetsPanel.tsx`    | all / favorites / recent               | unit + E2E            |
 
 Native selects are intentional: the option sets are short and finite, and platform-owned popup geometry, keyboard behavior, and English locale presentation are accepted for supported browsers.
 
@@ -30,12 +32,14 @@ Native selects are intentional: the option sets are short and finite, and platfo
 
 - Icon buttons have accessible names, visible focus, hover, active, disabled, and explanatory title states.
 - Asset cards support drag-and-drop and an explicit Add button alternative.
+- Ranked catalog search favors exact title and keyword matches; favorites and recent usage stay in local storage.
+- Scientific drawing tools use progressive disclosure and insert editable groups rather than flattened images.
 - Local file imports use labelled file controls and accessible dialogs.
 - The SVG metadata form uses `noValidate`, inline custom error feedback, and blocks invalid HTTP(S) source/license URLs.
 - Metadata textareas have fixed height and no resize handle inside the bounded dialog.
 - Autosave state appears in the persistent status bar; short command feedback uses a polite live-region toast.
 - Destructive object deletion is reversible through Undo and therefore has no confirmation modal.
-- Home exposes a file-independent New figure action, Open project, autosave continuation, local recent projects, and immediately editable blank templates.
+- Home exposes a file-independent New figure action, Open project, autosave continuation, local recent projects, and immediately editable figure templates.
 - File, Edit, View, and Help menus expose only implemented commands. Common file and edit actions retain keyboard shortcuts.
 - Settings contains only working local preferences, local recent-history controls, privacy information, and project information.
 

@@ -6,6 +6,12 @@ import {
   sanitizeSvg,
 } from "../src/domain/assets/sanitize";
 import { searchAssets } from "../src/domain/assets/search";
+import {
+  loadAssetLibraryState,
+  recordRecentAsset,
+  saveAssetLibraryState,
+  toggleFavorite,
+} from "../src/domain/assets/libraryState";
 import { validateCatalog } from "../scripts/assets/validate-catalog";
 
 describe("asset catalog", () => {
@@ -53,6 +59,36 @@ describe("asset catalog", () => {
     expect(
       searchAssets(seedCatalog, { ...base, query: "", provider: "Other" }),
     ).toHaveLength(0);
+  });
+
+  it("ranks title matches ahead of description-only matches", () => {
+    const results = searchAssets(seedCatalog, {
+      query: "mitochondrion",
+      category: "",
+      provider: "",
+      license: "",
+      attribution: "all",
+    });
+    expect(results[0]?.title).toBe("Mitochondrion");
+  });
+
+  it("persists favorites and bounded recent assets without duplicates", () => {
+    const values = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+    };
+    let state = loadAssetLibraryState(storage);
+    state = toggleFavorite(state, "asset-a");
+    state = recordRecentAsset(state, "asset-a");
+    state = recordRecentAsset(state, "asset-b");
+    state = recordRecentAsset(state, "asset-a");
+    saveAssetLibraryState(storage, state);
+
+    expect(loadAssetLibraryState(storage)).toEqual({
+      favorites: ["asset-a"],
+      recent: ["asset-a", "asset-b"],
+    });
   });
 });
 

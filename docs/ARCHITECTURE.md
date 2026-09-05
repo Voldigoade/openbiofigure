@@ -9,7 +9,11 @@ React application shell
   ├─ FabricEditor adapter ── Fabric.js canvas
   ├─ domain/project ──────── versioned engine-independent model
   ├─ domain/assets ───────── schemas, sanitizer, search, providers
+  ├─ domain/templates ────── editable starter compositions
+  ├─ domain/scientific ───── editable scientific primitive groups
+  ├─ domain/charts ───────── validated vector chart generation
   ├─ domain/licensing ────── publication checks and attribution
+  ├─ domain/publication ───── technical preflight and report
   ├─ domain/storage ──────── IndexedDB autosave
   └─ domain/export ───────── OBF JSON, SVG metadata, downloads
 
@@ -30,6 +34,7 @@ React state updates on committed canvas changes and selection changes, not on ev
 4. IndexedDB autosave stores that model; `.obf.json` uses the same validated contract.
 5. Publication checks derive only from assets actually referenced by canvas objects.
 6. SVG export embeds a machine-readable provenance summary; attribution files contain the complete ledger.
+7. Templates, scientific elements, and charts enter the editor as ordinary public-format primitives and groups, so they remain editable and engine-independent.
 
 ## Extension points
 
@@ -37,7 +42,7 @@ React state updates on committed canvas changes and selection changes, not on ev
 - engine adapter boundary for rendering/editing
 - versioned migrations for project format evolution
 - domain export helpers for future PDF/journal exporters
-- object `kind` union for future scientific shapes, charts, chemical structures, and panels
+- composable object groups for templates, scientific elements, charts, and panels without vendor-specific serialization
 
 New extensions must preserve offline usefulness and must not weaken provenance or SVG-safety controls.
 

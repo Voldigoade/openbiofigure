@@ -72,10 +72,22 @@ export function PropertyInspector({
             <input type="number" value={selection.y} onChange={numeric("y")} />
           </FormField>
           <FormField label="W">
-            <input type="number" value={selection.width} disabled />
+            <input
+              type="number"
+              min="1"
+              value={selection.width}
+              disabled={selection.count > 1}
+              onChange={numeric("width")}
+            />
           </FormField>
           <FormField label="H">
-            <input type="number" value={selection.height} disabled />
+            <input
+              type="number"
+              min="1"
+              value={selection.height}
+              disabled={selection.count > 1}
+              onChange={numeric("height")}
+            />
           </FormField>
           <FormField label="Rotation">
             <input

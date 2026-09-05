@@ -10,6 +10,10 @@ import {
   checkPublication,
   generateAttributions,
 } from "../src/domain/licensing/attribution";
+import {
+  buildPublicationReport,
+  checkPublicationReadiness,
+} from "../src/domain/publication/preflight";
 import { createProject } from "../src/domain/project/factory";
 import { migrateProject } from "../src/domain/project/migrations";
 import { MemoryProjectStorage } from "../src/domain/storage/projectStorage";
@@ -26,6 +30,32 @@ function projectAsset(metadata: AssetMetadata): ProjectAsset {
 }
 
 describe("licensing and attribution", () => {
+  it("reports publication blockers and produces a portable review report", () => {
+    const empty = createProject();
+    expect(checkPublicationReadiness(empty).ready).toBe(false);
+    empty.metadata.title = "Cell response";
+    empty.objects.push({
+      id: "rect-1",
+      name: "Observation",
+      kind: "rect",
+      x: 100,
+      y: 100,
+      width: 100,
+      height: 100,
+      scaleX: 1,
+      scaleY: 1,
+      angle: 0,
+      opacity: 1,
+      visible: true,
+      locked: false,
+      fill: "#ffffff",
+      stroke: "#000000",
+      strokeWidth: 1,
+    });
+    expect(checkPublicationReadiness(empty).ready).toBe(true);
+    expect(buildPublicationReport(empty)).toContain("Preflight: ready");
+    expect(buildPublicationReport(empty)).toContain("not legal advice");
+  });
   it("tracks an asset through project, publication check, and attribution outputs", () => {
     const project = createProject();
     const metadata = seedCatalog.find(

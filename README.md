@@ -1,6 +1,6 @@
 # OpenBioFigure
 
-> **Status: early-stage.** V0.1 is released; V0.2 is in active development. The editor is usable for local figure composition and export, but its file format and verified asset catalog may still evolve.
+> **Status: early-stage.** V0.2 is the current release line. The editor is usable for local figure composition and export, but its file format and verified asset catalog may still evolve.
 
 OpenBioFigure is an open-source, browser-first editor for scientific figures. It combines editable vector composition with native tracking of scientific asset provenance, licenses, and required credits—without an account, backend, telemetry, or mandatory AI.
 
@@ -13,10 +13,11 @@ Scientific figures often require several tools, manual asset searches, and a sep
 - Text, rectangles, ellipses, lines, arrows, connectors, SVG assets, and groups
 - Multi-selection, transforms, layers, alignment, distribution, lock/visibility, undo/redo
 - Local autosave and versioned `.obf.json` project files
-- First-run Home, blank templates, and recent projects stored only on the device
-- Instant local asset search with category, source, license, and attribution filters
-- Publication check and Markdown/TXT attribution generation
-- Editable SVG and configurable-resolution PNG export
+- First-run Home, editable figure templates, and recent projects stored only on the device
+- Ranked local asset search, filters, favorites, and recently used assets
+- Editable cells, membranes, DNA, figure panels, scale bars, and bar/line charts
+- Publication preflight plus Markdown/TXT attribution and publication reports
+- Editable SVG and configurable-resolution PNG export with provenance metadata
 - Sanitized local SVG import with optional provenance metadata
 
 The bundled verified catalog contains 410 Bioicons assets: 409 CC0-1.0 assets and one CC-BY-3.0 asset. A pinned, reproducible ingestion pipeline rejects incomplete provenance and unsafe SVG content. OpenBioFigure helps track licensing metadata; it does not provide legal advice.
