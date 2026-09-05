@@ -1,13 +1,14 @@
 import { ChevronDown, FilePlus2, Search, Upload, X } from "lucide-react";
-import { useMemo, useRef, type ChangeEvent } from "react";
-import { getSeedSvg, seedCatalog } from "../../assets/catalog";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { getSeedAssetUrl, seedCatalog } from "../../assets/catalog";
 import { FormField } from "../../components/ui/FormField";
 import { IconButton } from "../../components/ui/IconButton";
-import { sanitizeSvg } from "../../domain/assets/sanitize";
 import { searchAssets, type AssetFilters } from "../../domain/assets/search";
 import type { AssetMetadata } from "../../domain/assets/schema";
 import { t, type Locale } from "../../i18n/messages";
 import { DEFAULT_ASSET_FILTERS } from "./filters";
+
+const RESULT_PAGE_SIZE = 48;
 
 interface AssetsPanelProps {
   locale: Locale;
@@ -27,18 +28,45 @@ export function AssetsPanel({
   onRequestFile,
 }: AssetsPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [visibleCount, setVisibleCount] = useState(RESULT_PAGE_SIZE);
   const results = useMemo(() => searchAssets(seedCatalog, filters), [filters]);
-  const categories = [...new Set(seedCatalog.map((asset) => asset.category))];
+  const visibleResults = results.slice(0, visibleCount);
+  const categories = [
+    ...new Set(seedCatalog.map((asset) => asset.category)),
+  ].sort((left, right) => left.localeCompare(right));
   const providers = [
     ...new Set(seedCatalog.map((asset) => asset.source.provider)),
-  ];
-  const licenses = [...new Set(seedCatalog.map((asset) => asset.license.id))];
+  ].sort((left, right) => left.localeCompare(right));
+  const licenses = [
+    ...new Set(seedCatalog.map((asset) => asset.license.id)),
+  ].sort((left, right) => left.localeCompare(right));
+
+  useEffect(() => setVisibleCount(RESULT_PAGE_SIZE), [filters]);
+
+  useEffect(() => {
+    const focusSearch = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey)
+        return;
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement
+      )
+        return;
+      event.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener("keydown", focusSearch);
+    return () => window.removeEventListener("keydown", focusSearch);
+  }, []);
 
   return (
     <aside className="left-panel" aria-label="Scientific asset library">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">Verified catalog</p>
+          <p className="eyebrow">{t(locale, "verifiedCatalog")}</p>
           <h2>{t(locale, "assets")}</h2>
         </div>
         <span className="count-badge">{seedCatalog.length}</span>
@@ -46,6 +74,7 @@ export function AssetsPanel({
       <div className="search-control">
         <Search aria-hidden="true" />
         <input
+          ref={searchInputRef}
           aria-label={t(locale, "searchAssets")}
           placeholder={t(locale, "searchAssets")}
           value={filters.query}
@@ -64,7 +93,7 @@ export function AssetsPanel({
       </div>
       <details className="filters">
         <summary>
-          <span>Filters</span>
+          <span>{t(locale, "filters")}</span>
           <ChevronDown aria-hidden="true" />
         </summary>
         <div className="filter-grid">
@@ -126,7 +155,10 @@ export function AssetsPanel({
         </div>
       </details>
       <div className="asset-results" aria-live="polite">
-        {results.map((asset) => (
+        <p className="asset-result-summary">
+          {results.length} {t(locale, "results")}
+        </p>
+        {visibleResults.map((asset) => (
           <article
             className="asset-card"
             key={asset.id}
@@ -138,14 +170,11 @@ export function AssetsPanel({
                 asset.id,
               );
             }}
+            onDoubleClick={() => onAdd(asset)}
           >
-            <div
-              className="asset-thumb"
-              aria-hidden="true"
-              dangerouslySetInnerHTML={{
-                __html: sanitizeSvg(getSeedSvg(asset)).svg,
-              }}
-            />
+            <div className="asset-thumb" aria-hidden="true">
+              <img src={getSeedAssetUrl(asset)} alt="" loading="lazy" />
+            </div>
             <div className="asset-card-copy">
               <strong>{asset.title}</strong>
               <span>{asset.category}</span>
@@ -178,13 +207,22 @@ export function AssetsPanel({
             </button>
           </div>
         )}
+        {visibleCount < results.length && (
+          <button
+            type="button"
+            className="show-more-button"
+            onClick={() => setVisibleCount((count) => count + RESULT_PAGE_SIZE)}
+          >
+            {t(locale, "showMore")} · {results.length - visibleCount}
+          </button>
+        )}
       </div>
       <button
         type="button"
         className="import-button"
         onClick={onRequestFile ?? (() => fileInputRef.current?.click())}
       >
-        <Upload aria-hidden="true" /> Import local SVG
+        <Upload aria-hidden="true" /> {t(locale, "importLocalSvg")}
       </button>
       <input
         ref={fileInputRef}

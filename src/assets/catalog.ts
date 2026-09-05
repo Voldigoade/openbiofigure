@@ -1,7 +1,3 @@
-import bacteriumSvg from "../../packages/assets/svg/bacterium.svg?raw";
-import microscopeSvg from "../../packages/assets/svg/microscope.svg?raw";
-import mitochondrionSvg from "../../packages/assets/svg/mitochondrion.svg?raw";
-import phageSvg from "../../packages/assets/svg/phage.svg?raw";
 import rawCatalog from "../../packages/assets/catalog.json";
 import {
   assetMetadataSchema,
@@ -9,17 +5,29 @@ import {
   type AssetProvider,
 } from "../domain/assets/schema";
 
-const svgByFile: Record<string, string> = {
-  "bacterium.svg": bacteriumSvg,
-  "microscope.svg": microscopeSvg,
-  "mitochondrion.svg": mitochondrionSvg,
-  "phage.svg": phageSvg,
-};
+const svgModules = import.meta.glob<string>("../../packages/assets/svg/*.svg", {
+  eager: true,
+  import: "default",
+  query: "?url",
+});
+const svgUrlByFile = Object.fromEntries(
+  Object.entries(svgModules).map(([path, url]) => [
+    path.split("/").at(-1)!,
+    url,
+  ]),
+);
 
-export function getSeedSvg(asset: AssetMetadata): string {
-  const svg = svgByFile[asset.file];
-  if (!svg) throw new Error(`Missing SVG for asset ${asset.id}.`);
-  return svg;
+export function getSeedAssetUrl(asset: AssetMetadata): string {
+  const url = svgUrlByFile[asset.file];
+  if (!url) throw new Error(`Missing SVG for asset ${asset.id}.`);
+  return url;
+}
+
+export async function getSeedSvg(asset: AssetMetadata): Promise<string> {
+  const response = await fetch(getSeedAssetUrl(asset));
+  if (!response.ok)
+    throw new Error(`Unable to load SVG for asset ${asset.id}.`);
+  return response.text();
 }
 
 export const seedCatalog = assetMetadataSchema.array().parse(rawCatalog);
@@ -33,7 +41,7 @@ export class VerifiedSeedProvider implements AssetProvider {
   }
 
   loadSvg(asset: AssetMetadata): Promise<string> {
-    return Promise.resolve(getSeedSvg(asset));
+    return getSeedSvg(asset);
   }
 }
 

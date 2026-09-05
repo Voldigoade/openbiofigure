@@ -5,3 +5,4 @@ playwright-report/
 test-results/
 src-tauri/target/
 src-tauri/gen/schemas/
+packages/assets/svg/

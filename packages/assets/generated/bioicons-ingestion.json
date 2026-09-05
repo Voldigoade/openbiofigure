@@ -1,0 +1,67 @@
+{
+  "provider": "bioicons",
+  "repository": "duerrsimon/bioicons",
+  "revision": "d29e766ea7580b8063c4f47b29e872db40a4d979",
+  "retrievedAt": "2026-09-05",
+  "policy": {
+    "licenseDirectory": "static/icons/cc-0",
+    "maxSourceBytes": 100000
+  },
+  "candidates": 422,
+  "alreadyPresent": 409,
+  "newlyImported": 0,
+  "duplicateContentsSkipped": [
+    "static/icons/cc-0/Human_physiology/Fang-fang-yang-/metabolites.svg"
+  ],
+  "rejected": [
+    {
+      "path": "static/icons/cc-0/Cell_membrane/Jan-Jezierski/receptor.svg",
+      "reason": "No matching entry in the pinned upstream icons.json metadata."
+    },
+    {
+      "path": "static/icons/cc-0/Chemistry/Hanna/Beaker_water_stir_bar.svg",
+      "reason": "No matching entry in the pinned upstream icons.json metadata."
+    },
+    {
+      "path": "static/icons/cc-0/Chemistry/nUll/Beaker_water.svg",
+      "reason": "The pinned upstream metadata does not identify a creator."
+    },
+    {
+      "path": "static/icons/cc-0/General_items/FGC/freezer_tube.svg",
+      "reason": "No matching entry in the pinned upstream icons.json metadata."
+    },
+    {
+      "path": "static/icons/cc-0/General_items/Samuel-Nestor-Meckoni/bucket_tub_tun_with_water.min.svg",
+      "reason": "No matching entry in the pinned upstream icons.json metadata."
+    },
+    {
+      "path": "static/icons/cc-0/Genetics/yangzs/Sanger_sequencing.svg",
+      "reason": "No matching entry in the pinned upstream icons.json metadata."
+    },
+    {
+      "path": "static/icons/cc-0/Lab_apparatus/Erick-Hernández-López/tubo_de_recoleccion_de_sangre.svg",
+      "reason": "No matching entry in the pinned upstream icons.json metadata."
+    },
+    {
+      "path": "static/icons/cc-0/Lab_apparatus/Geomicrobio/120ml_Vial.svg",
+      "reason": "No matching entry in the pinned upstream icons.json metadata."
+    },
+    {
+      "path": "static/icons/cc-0/Microbiology/Geomicrobio/Tree_Life_Prokarytes.svg",
+      "reason": "No matching entry in the pinned upstream icons.json metadata."
+    },
+    {
+      "path": "static/icons/cc-0/Safety_symbols/Erick-Hernández-López/Riesgo_biologico_diseño_propio.svg",
+      "reason": "No matching entry in the pinned upstream icons.json metadata."
+    },
+    {
+      "path": "static/icons/cc-0/Scientific_graphs/Bruno-Hernáez/Poxvirus.svg",
+      "reason": "No matching entry in the pinned upstream icons.json metadata."
+    },
+    {
+      "path": "static/icons/cc-0/Scientific_graphs/Erick-Hernández-López/Barras.svg",
+      "reason": "No matching entry in the pinned upstream icons.json metadata."
+    }
+  ],
+  "catalogTotal": 410
+}

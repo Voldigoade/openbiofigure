@@ -24,6 +24,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "assets:build": "tsx scripts/assets/build-catalog.ts",
+    "assets:ingest:bioicons": "tsx scripts/assets/ingest-bioicons.ts",
     "assets:validate": "tsx scripts/assets/validate-catalog.ts",
     "docs:validate": "node scripts/validate-docs.mjs",
     "verify:privacy": "node scripts/verify-privacy.mjs",

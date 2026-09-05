@@ -17,7 +17,7 @@ Tauri desktop shell
   └─ scoped native dialogs ─ project/SVG open and project/SVG/PNG/credits save
 
 packages/assets + scripts/assets
-  └─ verified files, source metadata, hash/safety validation, search index
+  └─ pinned provider policies, verified files, provenance, ingestion, safety validation
 ```
 
 React state updates on committed canvas changes and selection changes, not on every pointer movement. Fabric owns the high-frequency interactive rendering loop. The adapter maps objects to `OpenBioFigureProject`; Fabric’s internal serialization is never the public format.
@@ -43,6 +43,8 @@ New extensions must preserve offline usefulness and must not weaken provenance o
 
 ## Runtime and deployment
 
-Vite builds static files to `dist/`. A small service worker caches same-origin GET resources after first load for offline use. IndexedDB stores only the current local autosave. The static output is self-hostable and compatible with GitHub Pages or any static host.
+Vite builds static files to `dist/`. Scientific SVGs are emitted as separate static resources instead of being embedded in the initial JavaScript bundle. A small service worker precaches same-origin application and catalog resources for offline use. IndexedDB stores the current autosave and recent projects. The static output is self-hostable and compatible with GitHub Pages or any static host.
 
 Tauri 2 packages the same output for Windows with native user-selected file dialogs and no broad filesystem or shell capability. Offline NSIS and MSI installers embed WebView2. See [ADR-004](architecture/ADR-004-desktop-runtime.md) and the [desktop build guide](DESKTOP.md).
+
+The bundled Bioicons snapshot is governed by [ADR-005](architecture/ADR-005-bioicons-catalog-ingestion.md). Adding another provider requires a provider-specific ingestion policy; the normalized runtime contract remains `AssetProvider`.

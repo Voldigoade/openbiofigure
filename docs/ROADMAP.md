@@ -12,7 +12,7 @@ Implemented in V0.1: document presets, core objects and transforms, layers, hist
 
 ## Phase 2 — Scientific asset catalog
 
-Started with a four-asset verified Bioicons seed catalog and reproducible validation pipeline. Expand only through individual source/license review and contributor evidence.
+Expanded for V0.2 to 410 Bioicons assets through a pinned, reproducible CC0 ingestion pipeline, with 12 incomplete records rejected and one duplicate skipped. Further providers or license families require source-specific review and contributor evidence.
 
 ## Phase 3 — Provenance/licensing engine
 

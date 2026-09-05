@@ -11,9 +11,12 @@ import { validateCatalog } from "../scripts/assets/validate-catalog";
 describe("asset catalog", () => {
   it("validates every bundled file, hash, license, and provenance record", async () => {
     const result = await validateCatalog();
-    expect(result.assets).toHaveLength(4);
-    expect(result.licenseCounts).toEqual({ "CC-BY-3.0": 1, "CC0-1.0": 3 });
-  });
+    expect(result.assets).toHaveLength(410);
+    expect(result.licenseCounts).toEqual({
+      "CC-BY-3.0": 1,
+      "CC0-1.0": 409,
+    });
+  }, 20_000);
 
   it("searches title, keywords, category, provider, license and attribution", () => {
     const base = {
@@ -23,24 +26,30 @@ describe("asset catalog", () => {
       license: "",
       attribution: "all" as const,
     };
-    expect(searchAssets(seedCatalog, base).map((asset) => asset.title)).toEqual(
-      ["Mitochondrion"],
-    );
+    const queryResults = searchAssets(seedCatalog, base);
+    expect(queryResults.map((asset) => asset.title)).toContain("Mitochondrion");
+    const categoryResults = searchAssets(seedCatalog, {
+      ...base,
+      query: "",
+      category: "Microbiology",
+    });
+    expect(categoryResults.length).toBeGreaterThan(0);
     expect(
-      searchAssets(seedCatalog, {
-        ...base,
-        query: "",
-        category: "Microbiology",
-      }),
-    ).toHaveLength(2);
+      categoryResults.every((asset) => asset.category === "Microbiology"),
+    ).toBe(true);
+    const licenseResults = searchAssets(seedCatalog, {
+      ...base,
+      query: "",
+      license: "CC0-1.0",
+      attribution: "not-required",
+    });
+    expect(licenseResults.length).toBe(409);
     expect(
-      searchAssets(seedCatalog, {
-        ...base,
-        query: "",
-        license: "CC0-1.0",
-        attribution: "not-required",
-      }),
-    ).toHaveLength(3);
+      licenseResults.every(
+        (asset) =>
+          asset.license.id === "CC0-1.0" && !asset.license.attributionRequired,
+      ),
+    ).toBe(true);
     expect(
       searchAssets(seedCatalog, { ...base, query: "", provider: "Other" }),
     ).toHaveLength(0);

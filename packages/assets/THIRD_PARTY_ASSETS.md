@@ -1,12 +1,22 @@
 # Third-party scientific assets
 
-The bundled scientific SVGs are separate from OpenBioFigure's Apache-2.0 software licence.
+The 410 bundled scientific SVGs are separate from OpenBioFigure's Apache-2.0 software license. They remain under the terms recorded for each asset in `catalog.json`.
 
-| Local file              | Upstream creator    | Provider | Licence   | Attribution required | SHA-256                                                            |
-| ----------------------- | ------------------- | -------- | --------- | -------------------- | ------------------------------------------------------------------ |
-| `svg/mitochondrion.svg` | Servier Medical Art | Bioicons | CC BY 3.0 | Yes                  | `82E4CA25C5781B84055D5D7A56B213ACE215715AF2B7A66C9D220B15489D0A98` |
-| `svg/bacterium.svg`     | Pauline Franz       | Bioicons | CC0 1.0   | No                   | `2984B266EEDFAD88AED6701FB0F5D3D1A11DBBDC88326A0F160E170D32DF21BF` |
-| `svg/phage.svg`         | James Lloyd         | Bioicons | CC0 1.0   | No                   | `4B810CA6CD57ED251141A4F701FF98BCBE7E905E0CB982D96304C218BA8CF57E` |
-| `svg/microscope.svg`    | Derek Croote        | Bioicons | CC0 1.0   | No                   | `3E08DF9594346D745D8380F0B68F257308CAD5CB94252A0D5FA93D3EA1AC6412` |
+## Catalog snapshot
 
-The complete source and licence URLs are machine-readable in `catalog.json`. Bioicons explicitly instructs users to cite each individual icon and its respective licence; the licence-specific repository directories were checked before inclusion. The Servier-derived mitochondrion is intentionally recorded as CC BY 3.0 because that is the licence attached to this specific Bioicons copy, rather than applying Servier's current site-wide terms retroactively.
+- Provider: Bioicons
+- Assets: 410
+- Creators represented: 57
+- CC0-1.0: 409 assets; attribution not required
+- CC-BY-3.0: 1 asset; attribution required
+- Pinned upstream revision for the V0.2 ingestion: `d29e766ea7580b8063c4f47b29e872db40a4d979`
+
+`catalog.json` is the machine-readable source of truth for every local filename, source URL, upstream path and revision, creator, license, attribution text, retrieval date, and SHA-256 integrity value. `generated/bioicons-ingestion.json` records the deterministic screening result, including files rejected for missing upstream metadata and duplicate content.
+
+## Attribution-required asset
+
+| Local file              | Upstream creator    | Provider | License   | Attribution required |
+| ----------------------- | ------------------- | -------- | --------- | -------------------- |
+| `svg/mitochondrion.svg` | Servier Medical Art | Bioicons | CC BY 3.0 | Yes                  |
+
+Bioicons explicitly instructs users to cite each individual icon and its respective license. The ingestion therefore reads only a specific license directory and still preserves per-asset creator and source data. The Servier-derived mitochondrion remains recorded as CC BY 3.0 because that is the license attached to this specific Bioicons copy; OpenBioFigure does not retroactively apply different collection-wide terms.

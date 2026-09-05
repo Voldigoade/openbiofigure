@@ -11,6 +11,7 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 - First-run Home, blank templates, local recent projects, Settings, and desktop-style application menus.
 - Generated PWA precache manifest and an end-to-end offline create/search/export test.
 - Visible grid and optional snap-to-grid behavior.
+- Verified 410-asset Bioicons catalog with pinned CC0 ingestion, sanitization, deduplication, rejection reporting, and paged local browsing.
 
 ### Changed
 

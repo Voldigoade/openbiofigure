@@ -1,0 +1,16 @@
+{
+  "id": "bioicons",
+  "label": "Bioicons",
+  "repository": "duerrsimon/bioicons",
+  "revision": "d29e766ea7580b8063c4f47b29e872db40a4d979",
+  "retrievedAt": "2026-09-05",
+  "licenseDirectory": "static/icons/cc-0",
+  "license": {
+    "id": "CC0-1.0",
+    "name": "CC0 1.0 Universal",
+    "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "attributionRequired": false
+  },
+  "maxSourceBytes": 100000,
+  "upstreamReadme": "https://github.com/duerrsimon/bioicons/blob/d29e766ea7580b8063c4f47b29e872db40a4d979/README.md"
+}

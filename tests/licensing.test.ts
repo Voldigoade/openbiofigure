@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getSeedSvg, seedCatalog } from "../src/assets/catalog";
+import { seedCatalog } from "../src/assets/catalog";
 import type { AssetMetadata, ProjectAsset } from "../src/domain/assets/schema";
 import {
   buildProjectJson,
@@ -18,13 +18,19 @@ function projectAsset(metadata: AssetMetadata): ProjectAsset {
   const { file, integrity, ...asset } = metadata;
   void file;
   void integrity;
-  return { ...asset, svg: getSeedSvg(metadata), verified: true };
+  return {
+    ...asset,
+    svg: '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0h10v10H0z"/></svg>',
+    verified: true,
+  };
 }
 
 describe("licensing and attribution", () => {
   it("tracks an asset through project, publication check, and attribution outputs", () => {
     const project = createProject();
-    const metadata = seedCatalog[0]!;
+    const metadata = seedCatalog.find(
+      (asset) => asset.id === "bioicons-mitochondrion-orange",
+    )!;
     project.assets.push(projectAsset(metadata));
     project.objects.push({
       id: "mito-1",
