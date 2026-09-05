@@ -1,8 +1,8 @@
 # Asset catalog report
 
-- Validated assets: 4
+- Validated assets: 410
 - Providers: 1
-- Licenses: CC-BY-3.0 (1), CC0-1.0 (3)
+- Licenses: CC0-1.0 (409), CC-BY-3.0 (1)
 - Attribution required: 1
 - Unknown or incomplete licenses: 0
 

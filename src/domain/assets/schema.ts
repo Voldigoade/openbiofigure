@@ -9,7 +9,7 @@ export const assetLicenseSchema = z.object({
   attributionRequired: z.boolean(),
 });
 
-export const assetMetadataSchema = z.object({
+const assetMetadataBaseSchema = z.object({
   id: z.string().regex(/^[a-z0-9][a-z0-9-]+$/),
   title: z.string().min(1),
   description: z.string().min(1),
@@ -22,6 +22,8 @@ export const assetMetadataSchema = z.object({
     sourceUrl: absoluteUrl,
     assetUrl: absoluteUrl,
     retrievedAt: z.iso.date(),
+    revision: z.string().min(7),
+    upstreamPath: z.string().min(1),
   }),
   creator: z.object({
     name: z.string().min(1),
@@ -35,7 +37,29 @@ export const assetMetadataSchema = z.object({
   }),
 });
 
-export const projectAssetSchema = assetMetadataSchema
+function validateModificationState(
+  asset: {
+    attribution: { modified: boolean; modificationNotes: string | null };
+  },
+  context: z.RefinementCtx,
+) {
+  if (
+    asset.attribution.modified !== Boolean(asset.attribution.modificationNotes)
+  ) {
+    context.addIssue({
+      code: "custom",
+      path: ["attribution", "modificationNotes"],
+      message:
+        "Modification notes must be present exactly when modified is true.",
+    });
+  }
+}
+
+export const assetMetadataSchema = assetMetadataBaseSchema.superRefine(
+  validateModificationState,
+);
+
+export const projectAssetSchema = assetMetadataBaseSchema
   .omit({ file: true, integrity: true, source: true })
   .extend({
     source: z.object({
@@ -43,10 +67,13 @@ export const projectAssetSchema = assetMetadataSchema
       sourceUrl: absoluteUrl.nullable(),
       assetUrl: absoluteUrl.nullable(),
       retrievedAt: z.iso.date(),
+      revision: z.string().min(7).nullable().optional(),
+      upstreamPath: z.string().min(1).nullable().optional(),
     }),
     svg: z.string().min(1),
     verified: z.boolean(),
-  });
+  })
+  .superRefine(validateModificationState);
 
 export type AssetMetadata = z.infer<typeof assetMetadataSchema>;
 export type ProjectAsset = z.infer<typeof projectAssetSchema>;

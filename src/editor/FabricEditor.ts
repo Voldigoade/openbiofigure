@@ -17,6 +17,10 @@ import type {
   OpenBioFigureProject,
   ProjectObject,
 } from "../domain/project/schema";
+import {
+  createScientificElement,
+  type ScientificElementKind,
+} from "../domain/scientific/elements";
 
 type ObjectKind = ProjectObject["kind"];
 type ManagedObject = FabricObject & {
@@ -66,7 +70,7 @@ const newId = (): string => globalThis.crypto.randomUUID();
 
 const defaults = {
   fill: "#DFF4F5",
-  stroke: "#087F8C",
+  stroke: "#066F79",
   strokeWidth: 2,
   opacity: 1,
   originX: "center" as const,
@@ -286,18 +290,26 @@ export class FabricEditor {
       backgroundColor: project.document.background,
       preserveObjectStacking: true,
       selectionColor: "rgba(8, 127, 140, 0.10)",
-      selectionBorderColor: "#087F8C",
+      selectionBorderColor: "#066F79",
       selectionLineWidth: 1,
     });
     Object.assign(FabricObject.ownDefaults, {
-      borderColor: "#087F8C",
+      borderColor: "#066F79",
       cornerColor: "#FFFFFF",
-      cornerStrokeColor: "#087F8C",
+      cornerStrokeColor: "#066F79",
       cornerStyle: "circle",
       transparentCorners: false,
       padding: 2,
     });
     this.canvas.on("object:modified", () => this.commit());
+    this.canvas.on("object:moving", ({ target }) => {
+      if (!target || !this.#project.settings.grid.snap) return;
+      const size = this.#project.settings.grid.size;
+      target.set({
+        left: Math.round(target.left / size) * size,
+        top: Math.round(target.top / size) * size,
+      });
+    });
     this.canvas.on("selection:created", () => this.emit());
     this.canvas.on("selection:updated", () => this.emit());
     this.canvas.on("selection:cleared", () => this.emit());
@@ -421,6 +433,20 @@ export class FabricEditor {
     const { x, y } = this.center();
     const object = tag(makeArrow(), "arrow", "Arrow");
     object.set({ left: x, top: y });
+    this.addAndSelect(object);
+  }
+
+  async addScientificElement(kind: ScientificElementKind) {
+    const { x, y } = this.center();
+    const object = await objectFromProject(
+      createScientificElement(kind, x, y),
+      this.#project.assets,
+    );
+    this.addAndSelect(object);
+  }
+
+  async addProjectObject(value: ProjectObject) {
+    const object = await objectFromProject(value, this.#project.assets);
     this.addAndSelect(object);
   }
 
@@ -563,7 +589,29 @@ export class FabricEditor {
       if (values.x !== undefined) active.set("left", values.x);
       if (values.y !== undefined) active.set("top", values.y);
       if (values.angle !== undefined) active.set("angle", values.angle);
+      if (
+        values.width !== undefined &&
+        values.width > 0 &&
+        objects.length === 1
+      )
+        active.scaleX *= values.width / active.getScaledWidth();
+      if (
+        values.height !== undefined &&
+        values.height > 0 &&
+        objects.length === 1
+      )
+        active.scaleY *= values.height / active.getScaledHeight();
+      active.setCoords();
     }
+    this.canvas.requestRenderAll();
+    this.commit();
+  }
+
+  nudgeSelection(x: number, y: number) {
+    const active = this.canvas.getActiveObject();
+    if (!active) return;
+    active.set({ left: active.left + x, top: active.top + y });
+    active.setCoords();
     this.canvas.requestRenderAll();
     this.commit();
   }

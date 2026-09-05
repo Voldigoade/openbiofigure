@@ -1,31 +1,160 @@
-name: Release v0.1.0
+name: Release
 
 on:
   push:
-    tags: [v0.1.0]
+    tags: ["v*.*.*"]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  release:
+  validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify tagged source commit
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -z "$(git status --porcelain)"
       - uses: pnpm/action-setup@v4
         with:
-          version: 10.15.1
-      - uses: actions/setup-node@v4
+          version: 11.19.0
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: node scripts/verify-release-version.mjs
       - run: pnpm verify
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
-      - run: tar -czf openbiofigure-static-v0.1.0.tar.gz -C dist .
+
+  static:
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Package static application
+        run: tar -czf "openbiofigure-static-${GITHUB_REF_NAME}.tar.gz" -C dist .
+      - uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: openbiofigure-${{ github.ref_name }}.spdx.json
+          upload-artifact: false
+      - name: Attest static application
+        uses: actions/attest@v4
+        with:
+          subject-path: openbiofigure-static-${{ github.ref_name }}.tar.gz
+      - name: Attest static application SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: openbiofigure-static-${{ github.ref_name }}.tar.gz
+          sbom-path: openbiofigure-${{ github.ref_name }}.spdx.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: static-release
+          if-no-files-found: error
+          path: |
+            openbiofigure-static-${{ github.ref_name }}.tar.gz
+            openbiofigure-${{ github.ref_name }}.spdx.json
+
+  windows:
+    needs: validate
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify tagged source commit
+        shell: pwsh
+        run: |
+          if ((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA) { throw "Unexpected checkout commit" }
+          if (git status --porcelain) { throw "Checkout is not clean" }
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/verify-release-version.mjs
+      - name: Build Windows packages with official Tauri action
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --bundles nsis,msi
+      - name: Collect release payloads
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path release-assets
+          Copy-Item src-tauri/target/release/bundle/nsis/*.exe release-assets/
+          Copy-Item src-tauri/target/release/bundle/msi/*.msi release-assets/
+          @{
+            repository = $env:GITHUB_REPOSITORY
+            commit = $env:GITHUB_SHA
+            workflow = $env:GITHUB_WORKFLOW
+            runId = $env:GITHUB_RUN_ID
+            runUrl = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+            runner = "GitHub-hosted windows-latest"
+          } | ConvertTo-Json | Set-Content release-assets/BUILD-INFO.json
+      - name: Attest Windows installers
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            release-assets/*.exe
+            release-assets/*.msi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          if-no-files-found: error
+          path: release-assets/*
+
+  publish:
+    needs: [static, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*-release"
+          merge-multiple: true
+          path: release-assets
+      - name: Generate release checksums
+        working-directory: release-assets
+        run: find . -maxdepth 1 -type f ! -name SHA256SUMS.txt -printf '%f\n' | sort | xargs sha256sum > SHA256SUMS.txt
       - uses: softprops/action-gh-release@v2
         with:
-          body_path: docs/releases/v0.1.0.md
-          files: openbiofigure-static-v0.1.0.tar.gz
+          body_path: docs/releases/${{ github.ref_name }}.md
+          files: release-assets/*
           fail_on_unmatched_files: true

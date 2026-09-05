@@ -80,9 +80,9 @@ export function sanitizeSvg(
     }
   }
 
-  const output = new domWindow.XMLSerializer().serializeToString(
-    document.documentElement,
-  );
+  const output = new domWindow.XMLSerializer()
+    .serializeToString(document.documentElement)
+    .replace(/[ \t]+$/gm, "");
   return {
     svg: output,
     changed: warnings.length > 0,

@@ -6,14 +6,23 @@ import {
   sanitizeSvg,
 } from "../src/domain/assets/sanitize";
 import { searchAssets } from "../src/domain/assets/search";
+import {
+  loadAssetLibraryState,
+  recordRecentAsset,
+  saveAssetLibraryState,
+  toggleFavorite,
+} from "../src/domain/assets/libraryState";
 import { validateCatalog } from "../scripts/assets/validate-catalog";
 
 describe("asset catalog", () => {
   it("validates every bundled file, hash, license, and provenance record", async () => {
     const result = await validateCatalog();
-    expect(result.assets).toHaveLength(4);
-    expect(result.licenseCounts).toEqual({ "CC-BY-3.0": 1, "CC0-1.0": 3 });
-  });
+    expect(result.assets).toHaveLength(410);
+    expect(result.licenseCounts).toEqual({
+      "CC-BY-3.0": 1,
+      "CC0-1.0": 409,
+    });
+  }, 20_000);
 
   it("searches title, keywords, category, provider, license and attribution", () => {
     const base = {
@@ -23,27 +32,63 @@ describe("asset catalog", () => {
       license: "",
       attribution: "all" as const,
     };
-    expect(searchAssets(seedCatalog, base).map((asset) => asset.title)).toEqual(
-      ["Mitochondrion"],
-    );
+    const queryResults = searchAssets(seedCatalog, base);
+    expect(queryResults.map((asset) => asset.title)).toContain("Mitochondrion");
+    const categoryResults = searchAssets(seedCatalog, {
+      ...base,
+      query: "",
+      category: "Microbiology",
+    });
+    expect(categoryResults.length).toBeGreaterThan(0);
     expect(
-      searchAssets(seedCatalog, {
-        ...base,
-        query: "",
-        category: "Microbiology",
-      }),
-    ).toHaveLength(2);
+      categoryResults.every((asset) => asset.category === "Microbiology"),
+    ).toBe(true);
+    const licenseResults = searchAssets(seedCatalog, {
+      ...base,
+      query: "",
+      license: "CC0-1.0",
+      attribution: "not-required",
+    });
+    expect(licenseResults.length).toBe(409);
     expect(
-      searchAssets(seedCatalog, {
-        ...base,
-        query: "",
-        license: "CC0-1.0",
-        attribution: "not-required",
-      }),
-    ).toHaveLength(3);
+      licenseResults.every(
+        (asset) =>
+          asset.license.id === "CC0-1.0" && !asset.license.attributionRequired,
+      ),
+    ).toBe(true);
     expect(
       searchAssets(seedCatalog, { ...base, query: "", provider: "Other" }),
     ).toHaveLength(0);
+  });
+
+  it("ranks title matches ahead of description-only matches", () => {
+    const results = searchAssets(seedCatalog, {
+      query: "mitochondrion",
+      category: "",
+      provider: "",
+      license: "",
+      attribution: "all",
+    });
+    expect(results[0]?.title).toBe("Mitochondrion");
+  });
+
+  it("persists favorites and bounded recent assets without duplicates", () => {
+    const values = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+    };
+    let state = loadAssetLibraryState(storage);
+    state = toggleFavorite(state, "asset-a");
+    state = recordRecentAsset(state, "asset-a");
+    state = recordRecentAsset(state, "asset-b");
+    state = recordRecentAsset(state, "asset-a");
+    saveAssetLibraryState(storage, state);
+
+    expect(loadAssetLibraryState(storage)).toEqual({
+      favorites: ["asset-a"],
+      recent: ["asset-a", "asset-b"],
+    });
   });
 });
 

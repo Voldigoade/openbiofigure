@@ -1,18 +1,22 @@
-const CACHE_NAME = "openbiofigure-v0.1";
+const CACHE_NAME = "openbiofigure-v0.2";
+const PRECACHE_FILES = ["__OPENBIOFIGURE_PRECACHE__"];
+
+async function precacheApplication() {
+  const cache = await caches.open(CACHE_NAME);
+  const precacheUrls = new Set([
+    new URL("./", self.registration.scope).href,
+    new URL("./index.html", self.registration.scope).href,
+    new URL("./manifest.webmanifest", self.registration.scope).href,
+    new URL("./icon.svg", self.registration.scope).href,
+    ...PRECACHE_FILES.map(
+      (file) => new URL(file, self.registration.scope).href,
+    ),
+  ]);
+  await cache.addAll([...precacheUrls]);
+}
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) =>
-        cache.addAll([
-          "./",
-          "./index.html",
-          "./manifest.webmanifest",
-          "./icon.svg",
-        ]),
-      ),
-  );
+  event.waitUntil(precacheApplication());
   self.skipWaiting();
 });
 
@@ -34,7 +38,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   event.respondWith(
-    caches.match(event.request).then(
+    caches.match(event.request, { ignoreVary: true }).then(
       (cached) =>
         cached ??
         fetch(event.request).then((response) => {

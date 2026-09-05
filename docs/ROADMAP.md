@@ -8,11 +8,11 @@ Completed for V0.1: vector-engine evaluation, independent project format, proven
 
 ## Phase 1 — Vector editor MVP
 
-Implemented in V0.1: document presets, core objects and transforms, layers, history, local persistence, project import/export, and SVG/PNG output. Next work is hardening connector behavior and direct canvas accessibility.
+Implemented in V0.1 and expanded in V0.2: document presets, core objects and transforms, layers, history, local persistence, project import/export, editable templates, scientific groups, numeric sizing, keyboard nudging, and SVG/PNG output. Next work is hardening connector behavior and direct canvas accessibility.
 
 ## Phase 2 — Scientific asset catalog
 
-Started with a four-asset verified Bioicons seed catalog and reproducible validation pipeline. Expand only through individual source/license review and contributor evidence.
+Expanded for V0.2 to 410 Bioicons assets through a pinned, reproducible CC0 ingestion pipeline, with 12 incomplete records rejected and one duplicate skipped. Ranked search, filters, favorites, and recent-use views are implemented locally. Further providers or license families require source-specific review and contributor evidence.
 
 ## Phase 3 — Provenance/licensing engine
 
@@ -20,8 +20,8 @@ Started in V0.1 with project-bound metadata, unknown-license blocking, modificat
 
 ## Phase 4 — Export & attribution
 
-Started in V0.1 with editable SVG, configurable PNG, embedded export metadata, and Markdown/TXT credits. Vector PDF and journal-specific export checks remain future work.
+Expanded in V0.2 with editable SVG, configurable PNG, embedded export metadata, Markdown/TXT credits, and a downloadable publication preflight report. Vector PDF and journal-specific color-profile checks remain future work.
 
 ## Phase 5 — Community ecosystem
 
-Future work: provider review process, templates, plugin boundaries, governance, release maintenance, and community-led curation based on demonstrated needs.
+V0.2 adds editable templates and built-in scientific drawing groups. Future work includes provider review, plugin boundaries, governance, release maintenance, and community-led curation based on demonstrated needs.

@@ -10,7 +10,6 @@ const ignored = new Set([
   "coverage",
   "playwright-report",
   "test-results",
-  ".premium-audit",
 ]);
 const textExtensions = new Set([
   ".md",
@@ -26,24 +25,30 @@ const textExtensions = new Set([
   ".html",
   ".svg",
   ".toml",
+  ".txt",
 ]);
 const home = resolve(homedir()).replaceAll("\\", "/").toLowerCase();
 const localUser = basename(homedir()).toLowerCase();
 const machineName = hostname().toLowerCase();
+const ignoredPaths = new Set(["src-tauri/gen", "src-tauri/target"]);
 const windowsUserPath = new RegExp(
   String.raw`[A-Z]:[\\/]+` + `Users` + String.raw`[\\/]+[^\s"'<>\\/]+`,
   "gi",
 );
 const unixUserPath = new RegExp(
-  `/` + `(?:Users|home)` + String.raw`/[^\s"'<>/]+`,
+  `/` + `(?:Users|home)` + String.raw`/[A-Za-z0-9._-]+(?:/|\\)`,
   "gi",
 );
+const genericAbsolutePath =
+  /(?<![A-Za-z0-9])(?:[A-Za-z]:[\\/](?!Windows[\\/]|Program Files(?: \(x86\))?[\\/])|\/(?:private\/)?(?:tmp|var\/folders)\/)[^\s"'<>]+/g;
 const findings = [];
 
 async function walk(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (ignored.has(entry.name)) continue;
     const path = join(directory, entry.name);
+    const projectPath = relative(root, path).replaceAll("\\", "/");
+    if (ignoredPaths.has(projectPath)) continue;
     if (entry.isDirectory()) await walk(path);
     else {
       const extension = entry.name.includes(".")
@@ -55,7 +60,7 @@ async function walk(directory) {
       )
         continue;
       const content = await readFile(path, "utf8");
-      const projectPath = relative(root, path);
+      const displayPath = relative(root, path);
       const normalized = content.replaceAll("\\", "/").toLowerCase();
       if (
         normalized.includes(home) ||
@@ -63,12 +68,18 @@ async function walk(directory) {
       )
         findings.push(`${relative(root, path)}: local user path`);
       if (
-        projectPath !== join("scripts", "verify-privacy.mjs") &&
+        displayPath !== join("scripts", "verify-privacy.mjs") &&
         (windowsUserPath.test(content) || unixUserPath.test(content))
       )
-        findings.push(`${projectPath}: absolute user path`);
+        findings.push(`${displayPath}: absolute user path`);
       windowsUserPath.lastIndex = 0;
       unixUserPath.lastIndex = 0;
+      if (
+        displayPath !== join("scripts", "verify-privacy.mjs") &&
+        genericAbsolutePath.test(content)
+      )
+        findings.push(`${displayPath}: absolute local development path`);
+      genericAbsolutePath.lastIndex = 0;
       if (machineName.length > 3 && normalized.includes(machineName))
         findings.push(`${relative(root, path)}: local hostname`);
       const emails =

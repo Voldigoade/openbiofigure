@@ -9,14 +9,28 @@ permissions:
   contents: read
 
 jobs:
+  source-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: node scripts/verify-source-tree.mjs
+      - run: node scripts/verify-privacy.mjs
+
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@v4
         with:
-          version: 10.15.1
-      - uses: actions/setup-node@v4
+          version: 11.19.0
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -30,11 +44,13 @@ jobs:
   browser:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@v4
         with:
-          version: 10.15.1
-      - uses: actions/setup-node@v4
+          version: 11.19.0
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -54,8 +70,16 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/dependency-review-action@v4
+        with:
+          # Tauri's Linux GTK3 graph currently pins glib 0.18.x. The advisory
+          # affects VariantStrIter APIs that OpenBioFigure does not call, and
+          # the Windows release target does not ship this Linux-only crate.
+          # Remove this exception as soon as upstream Tauri moves to glib 0.20+.
+          allow-ghsas: GHSA-wrw7-89jp-8q8g
 
   secrets:
     runs-on: ubuntu-latest
@@ -63,9 +87,26 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  desktop:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm desktop:check

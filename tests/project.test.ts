@@ -3,8 +3,71 @@ import { createProject, DOCUMENT_PRESETS } from "../src/domain/project/factory";
 import { ProjectHistory } from "../src/domain/project/history";
 import { migrateProject } from "../src/domain/project/migrations";
 import { openBioFigureProjectSchema } from "../src/domain/project/schema";
+import {
+  createTemplateProject,
+  FIGURE_TEMPLATES,
+} from "../src/domain/templates/templates";
+import {
+  createScientificElement,
+  type ScientificElementKind,
+} from "../src/domain/scientific/elements";
+import {
+  createChartObject,
+  validateChartSpec,
+} from "../src/domain/charts/chart";
 
 describe("project model", () => {
+  it("creates valid, editable projects from every bundled template", () => {
+    for (const template of FIGURE_TEMPLATES) {
+      const project = createTemplateProject(template.id);
+      expect(openBioFigureProjectSchema.parse(project)).toEqual(project);
+      expect(project.objects.length).toBeGreaterThan(5);
+      expect(project.document.preset).toBe(`template:${template.id}`);
+    }
+  });
+
+  it("creates schema-valid editable scientific elements", () => {
+    const kinds: ScientificElementKind[] = [
+      "cell",
+      "membrane",
+      "dna",
+      "panel",
+      "scale-bar",
+    ];
+    for (const kind of kinds) {
+      const project = createProject();
+      project.objects.push(createScientificElement(kind, 600, 400));
+      expect(openBioFigureProjectSchema.safeParse(project).success).toBe(true);
+    }
+  });
+
+  it("creates valid bar and line charts and rejects mismatched data", () => {
+    for (const kind of ["bar", "line"] as const) {
+      const project = createProject();
+      project.objects.push(
+        createChartObject(
+          {
+            kind,
+            title: "Results",
+            labels: ["Control", "Treatment"],
+            values: [12, 24],
+          },
+          600,
+          400,
+        ),
+      );
+      expect(openBioFigureProjectSchema.safeParse(project).success).toBe(true);
+    }
+    expect(
+      validateChartSpec({
+        kind: "bar",
+        title: "Results",
+        labels: ["Control", "Treatment"],
+        values: [12],
+      }),
+    ).toContain("same number");
+  });
+
   it("creates a valid project for every document preset", () => {
     for (const [preset, dimensions] of Object.entries(DOCUMENT_PRESETS)) {
       const project = createProject(preset as keyof typeof DOCUMENT_PRESETS);

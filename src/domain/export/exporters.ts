@@ -29,7 +29,7 @@ export function buildSvgExport(
   const attribution = generateAttributions(project);
   const metadata = escapeXml(
     JSON.stringify({
-      generator: "OpenBioFigure 0.1.0",
+      generator: "OpenBioFigure 0.2.0",
       projectFormat: project.formatVersion,
       title: project.metadata.title,
       attributions: attribution.check.assets.map((asset) => ({

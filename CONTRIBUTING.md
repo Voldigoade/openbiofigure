@@ -4,7 +4,7 @@ OpenBioFigure welcomes focused contributions to code, documentation, scientific 
 
 ## Setup
 
-Requirements: Node.js 20+ and pnpm 10.
+Requirements: Node.js 20+ and pnpm 11.
 
 ```bash
 git clone <repository-url>
@@ -17,14 +17,15 @@ The Vite URL opens a fully client-side editor; no account or external service is
 
 ## Commands
 
-| Command                | Purpose                                                                        |
-| ---------------------- | ------------------------------------------------------------------------------ |
-| `pnpm dev`             | Start the development server                                                   |
-| `pnpm test`            | Run unit and integration tests                                                 |
-| `pnpm test:e2e`        | Build and run Playwright browser workflows                                     |
-| `pnpm assets:validate` | Validate asset schema, hashes, safety, licenses, and duplicates                |
-| `pnpm assets:build`    | Regenerate the local search index and asset report                             |
-| `pnpm verify`          | Run formatting, lint, types, tests, asset validation, privacy audit, and build |
+| Command                       | Purpose                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------ |
+| `pnpm dev`                    | Start the development server                                                   |
+| `pnpm test`                   | Run unit and integration tests                                                 |
+| `pnpm test:e2e`               | Build and run Playwright browser workflows                                     |
+| `pnpm assets:validate`        | Validate asset schema, hashes, safety, licenses, and duplicates                |
+| `pnpm assets:build`           | Regenerate the local search index and asset report                             |
+| `pnpm assets:ingest:bioicons` | Intentionally rebuild the pinned Bioicons snapshot                             |
+| `pnpm verify`                 | Run formatting, lint, types, tests, asset validation, privacy audit, and build |
 
 ## Architecture at a glance
 
@@ -55,16 +56,15 @@ An asset is accepted only when redistribution rights and the exact source can be
 
 1. Add a pre-sanitized SVG to `packages/assets/svg/`.
 2. Add its complete record to `packages/assets/catalog.json`, including creator, exact source/asset URLs, retrieval date, license identifier/name/URL, attribution requirement/text, modification state, and SHA-256 integrity.
-3. Add the file to `src/assets/catalog.ts`.
-4. Run `pnpm assets:build` and `pnpm assets:validate`.
-5. Update `packages/assets/THIRD_PARTY_ASSETS.md`.
-6. Include evidence for the asset-specific license review in the pull request.
+3. Run `pnpm assets:build` and `pnpm assets:validate`.
+4. Update `packages/assets/THIRD_PARTY_ASSETS.md` when the catalog summary changes.
+5. Include evidence for the asset-specific license review in the pull request.
 
 Unknown or collection-level-only licensing is not sufficient. Do not mass-scrape a provider or assume one license applies to its whole library.
 
 ## Adding an asset provider
 
-Implement the `AssetProvider` interface in `src/domain/assets/schema.ts`. Providers must return normalized metadata and sanitized SVG content, work without weakening the project schema, and document caching, provenance, failure, and license-review behavior. Remote providers must remain optional so the editor stays useful offline.
+Implement the `AssetProvider` interface in `src/domain/assets/schema.ts`. Providers must return normalized metadata and sanitized SVG content, work without weakening the project schema, and document caching, provenance, failure, and license-review behavior. Add a provider-specific policy or ADR defining the exact source revision and accepted license scope. Remote providers must remain optional so the editor stays useful offline.
 
 ## Licensing contributions
 

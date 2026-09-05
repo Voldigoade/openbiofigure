@@ -15,6 +15,8 @@ V0.1 projects are UTF-8 JSON documents using `.obf.json`. The public model is in
 
 Objects use stable IDs and common transform/style fields. Supported V0.1 kinds are `rect`, `ellipse`, `text`, `line`, `arrow`, `connector`, `svg`, and recursive `group`. SVG objects reference an asset record by `assetId`; raw asset provenance is not duplicated on every object.
 
+V0.2 templates, scientific drawing elements, panels, scale bars, and charts deliberately compose these existing primitives and recursive groups. They do not add opaque engine-specific object kinds, so V0.1-compatible readers of format `1.0.0` retain the complete editable structure.
+
 ## Validation
 
 The Zod schema in `src/domain/project/schema.ts` validates all external project data before use. Dimensions, opacity, scales, URLs, dates, object kinds, and asset records are constrained. Unsupported versions or malformed objects fail closed with an import error.
