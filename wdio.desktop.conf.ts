@@ -1,9 +1,11 @@
+import { rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { browser } from "@wdio/globals";
 
 const appBinaryPath =
   process.env.OPENBIOFIGURE_DESKTOP_BINARY ??
   resolve("src-tauri/target/release/openbiofigure.exe");
+const webviewUserDataPath = resolve("test-results/desktop/webview-user-data");
 
 export const config = {
   runner: "local",
@@ -14,6 +16,11 @@ export const config = {
       browserName: "tauri",
       "tauri:options": {
         application: appBinaryPath,
+      },
+      "ms:edgeOptions": {
+        webviewOptions: {
+          userDataFolder: webviewUserDataPath,
+        },
       },
     },
   ],
@@ -45,6 +52,12 @@ export const config = {
   mochaOpts: {
     ui: "bdd",
     timeout: 120_000,
+  },
+  onPrepare: () => {
+    rmSync(webviewUserDataPath, { force: true, recursive: true });
+  },
+  onComplete: () => {
+    rmSync(webviewUserDataPath, { force: true, recursive: true });
   },
   afterTest: async (
     _test: unknown,
