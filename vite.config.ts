@@ -12,7 +12,7 @@ function offlinePrecacheManifest(): Plugin {
     generateBundle(_options, bundle) {
       generatedFiles = Object.values(bundle)
         .map((entry) => entry.fileName)
-        .filter((fileName) => /\.(?:css|js|svg)$/.test(fileName))
+        .filter((fileName) => /\.(?:css|html|js|svg)$/.test(fileName))
         .sort();
     },
     async writeBundle(options) {
@@ -44,6 +44,11 @@ export default defineConfig({
     sourcemap: true,
     assetsInlineLimit: 0,
     rollupOptions: {
+      input: {
+        home: resolve(process.cwd(), "index.html"),
+        app: resolve(process.cwd(), "app/index.html"),
+        download: resolve(process.cwd(), "download/index.html"),
+      },
       output: {
         manualChunks: {
           fabric: ["fabric"],
