@@ -20,7 +20,7 @@ test.afterEach(({ page }) => {
 });
 
 async function openEditor(page: Page) {
-  await page.goto("/");
+  await page.goto("/app/");
   const newFigure = page.getByRole("button", {
     name: "New figure",
     exact: true,
@@ -37,7 +37,7 @@ async function openEditor(page: Page) {
 }
 
 test("first run presents clear local-first start actions", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/app/");
   await expect(
     page.getByRole("heading", { name: "Create an editable scientific figure" }),
   ).toBeVisible();
@@ -56,7 +56,7 @@ test("first run presents clear local-first start actions", async ({ page }) => {
 test("persists theme, density, and reduced-motion preferences", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/app/");
   await page.getByRole("button", { name: "Settings" }).click();
   await page.getByRole("button", { name: "Appearance" }).click();
   await page.getByRole("button", { name: "Dark" }).click();
@@ -81,7 +81,7 @@ test("persists theme, density, and reduced-motion preferences", async ({
 });
 
 test("creates a figure from the New figure template flow", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/app/");
   await page.getByRole("button", { name: "New figure", exact: true }).click();
   await page.getByRole("tab", { name: /Use a template/ }).click();
   await page
@@ -100,7 +100,7 @@ test("creates a figure from the New figure template flow", async ({ page }) => {
 test("starts from a structured, editable scientific template", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/app/");
   await page.getByRole("button", { name: /Experimental workflow/ }).click();
   await expect(page.getByTestId("workspace")).toBeVisible();
   expect(await layerCount(page)).toBeGreaterThan(10);
@@ -455,7 +455,11 @@ test("keeps the core local workflow available offline", async ({
 }) => {
   await openEditor(page);
   const registrationState = await page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.register("./sw.js");
+    const manifest = document.querySelector<HTMLLinkElement>(
+      'link[rel="manifest"]',
+    );
+    const workerUrl = new URL("sw.js", manifest?.href ?? location.href).href;
+    const registration = await navigator.serviceWorker.register(workerUrl);
     await new Promise((resolve) => window.setTimeout(resolve, 1_000));
     return {
       active: registration.active?.state ?? null,
@@ -500,7 +504,7 @@ test("keeps the core local workflow available offline", async ({
   expect(cacheProbe, JSON.stringify(cacheProbe)).not.toContainEqual(
     expect.objectContaining({ status: "failed" }),
   );
-  await page.goto("/");
+  await page.goto("/app/");
   await expect(page.getByTestId("workspace")).toBeVisible();
   await page.getByLabel("Search scientific assets").fill("mitochondria");
   await expect(

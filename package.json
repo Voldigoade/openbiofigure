@@ -11,6 +11,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "docs:screenshots": "node scripts/capture-docs-screenshots.mjs",
     "preview": "vite preview",
     "tauri": "tauri",
     "desktop:dev": "tauri dev",
@@ -24,14 +28,16 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "pnpm test:e2e:web && pnpm test:e2e:docs",
+    "test:e2e:web": "playwright test",
+    "test:e2e:docs": "playwright test -c playwright.docs.config.ts",
     "assets:build": "tsx scripts/assets/build-catalog.ts",
     "assets:ingest:bioicons": "tsx scripts/assets/ingest-bioicons.ts",
     "assets:validate": "tsx scripts/assets/validate-catalog.ts",
     "docs:validate": "node scripts/validate-docs.mjs",
     "verify:privacy": "node scripts/verify-privacy.mjs",
     "verify:source": "node scripts/verify-source-tree.mjs",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm assets:validate && pnpm docs:validate && pnpm verify:privacy && pnpm verify:source && pnpm build"
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm assets:validate && pnpm docs:validate && pnpm verify:privacy && pnpm verify:source && pnpm build && pnpm docs:build"
   },
   "dependencies": {
     "@tauri-apps/api": "2.11.1",
@@ -73,6 +79,7 @@
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.42.0",
     "vite": "^7.1.4",
+    "vitepress": "1.6.4",
     "vitest": "^3.2.4",
     "webdriverio": "9.29.1",
     "yaml": "^2.8.1"

@@ -19,9 +19,12 @@
   "include": [
     "vite.config.ts",
     "playwright.config.ts",
+    "playwright.docs.config.ts",
     "wdio.desktop.conf.ts",
+    "docs/.vitepress/**/*.ts",
     "scripts",
     "tests/e2e",
+    "tests/docs-e2e",
     "tests/desktop"
   ]
 }

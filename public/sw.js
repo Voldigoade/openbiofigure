@@ -6,6 +6,10 @@ async function precacheApplication() {
   const precacheUrls = new Set([
     new URL("./", self.registration.scope).href,
     new URL("./index.html", self.registration.scope).href,
+    new URL("./app/", self.registration.scope).href,
+    new URL("./app/index.html", self.registration.scope).href,
+    new URL("./download/", self.registration.scope).href,
+    new URL("./download/index.html", self.registration.scope).href,
     new URL("./manifest.webmanifest", self.registration.scope).href,
     new URL("./icon.svg", self.registration.scope).href,
     ...PRECACHE_FILES.map(

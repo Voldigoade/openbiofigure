@@ -12,7 +12,7 @@ function offlinePrecacheManifest(): Plugin {
     generateBundle(_options, bundle) {
       generatedFiles = Object.values(bundle)
         .map((entry) => entry.fileName)
-        .filter((fileName) => /\.(?:css|html|js|svg)$/.test(fileName))
+        .filter((fileName) => /\.(?:css|html|js|svg|woff2)$/.test(fileName))
         .sort();
     },
     async writeBundle(options) {
@@ -62,6 +62,11 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
-    exclude: ["tests/e2e/**", "tests/desktop/**", "node_modules/**"],
+    exclude: [
+      "tests/e2e/**",
+      "tests/docs-e2e/**",
+      "tests/desktop/**",
+      "node_modules/**",
+    ],
   },
 });

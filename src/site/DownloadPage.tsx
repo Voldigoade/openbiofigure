@@ -43,7 +43,7 @@ export function DownloadPage() {
               Official files are built on a clean GitHub-hosted runner from the
               tagged public commit.
             </p>
-            <a href="../docs/developer/releases.html">
+            <a href="../docs/developers/verify-release">
               Verify checksums and attestations <ArrowRight />
             </a>
           </div>

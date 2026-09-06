@@ -471,6 +471,13 @@ export function SettingsScreen({
               </div>
               <div className="about-links">
                 <a
+                  href="https://voldigoade.github.io/openbiofigure/docs/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Documentation <ExternalLink />
+                </a>
+                <a
                   href="https://github.com/Voldigoade/openbiofigure"
                   target="_blank"
                   rel="noreferrer"

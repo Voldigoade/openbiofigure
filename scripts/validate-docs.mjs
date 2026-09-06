@@ -47,9 +47,25 @@ for (const file of files.filter((path) => extname(path) === ".md")) {
     if (!target || /^(?:https?:|mailto:|#|<)/.test(target)) continue;
     const local = decodeURIComponent(target.split("#")[0]);
     if (!local) continue;
-    try {
-      await stat(resolve(dirname(file), local));
-    } catch {
+    const candidates = local.startsWith("/")
+      ? [
+          resolve(root, "docs", local.slice(1)),
+          resolve(root, "docs", `${local.slice(1)}.md`),
+          resolve(root, "docs", local.slice(1), "index.md"),
+          resolve(root, "docs", "public", local.slice(1)),
+        ]
+      : [resolve(dirname(file), local)];
+    const exists = await Promise.all(
+      candidates.map(async (candidate) => {
+        try {
+          await stat(candidate);
+          return true;
+        } catch {
+          return false;
+        }
+      }),
+    );
+    if (!exists.some(Boolean)) {
       throw new Error(`Broken local Markdown link in ${file}: ${target}`);
     }
   }
