@@ -11,6 +11,7 @@ const shortcuts = [
   ["New figure", "Ctrl N"],
   ["Open project", "Ctrl O"],
   ["Save project", "Ctrl S"],
+  ["Quick actions", "Ctrl K"],
   ["Undo / redo", "Ctrl Z / Ctrl Y"],
   ["Copy / paste", "Ctrl C / Ctrl V"],
   ["Duplicate", "Ctrl D"],

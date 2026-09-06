@@ -12,6 +12,7 @@ Open the in-app **Help → Keyboard shortcuts** dialog for the authoritative lis
 | Group / ungroup  | `Ctrl+G` / `Ctrl+Shift+G` | `⌘G` / `⌘⇧G`            |
 | Delete selection | `Delete` or `Backspace`   | `Delete` or `Backspace` |
 | Save project     | `Ctrl+S`                  | `⌘S`                    |
+| Quick actions    | `Ctrl+K`                  | `⌘K`                    |
 | Keyboard help    | `?`                       | `?`                     |
 
 Shortcuts do not fire while you are typing in a text field. Direct canvas manipulation still has documented keyboard-accessibility limitations.

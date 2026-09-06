@@ -52,6 +52,7 @@ interface ApplicationMenuBarProps {
   onOpenAssets: () => void;
   onOpenLayers: () => void;
   onOpenLicensing: () => void;
+  onQuickActions: () => void;
   onShortcuts: () => void;
   onSettings: () => void;
   onExit: () => void;
@@ -78,6 +79,7 @@ export function ApplicationMenuBar({
   onOpenAssets,
   onOpenLayers,
   onOpenLicensing,
+  onQuickActions,
   onShortcuts,
   onSettings,
   onExit,
@@ -209,6 +211,9 @@ export function ApplicationMenuBar({
       <details className="app-menu" name="application-menu">
         <summary>Help</summary>
         <div role="menu">
+          <MenuAction shortcut="Ctrl+K" onSelect={onQuickActions}>
+            Quick actions
+          </MenuAction>
           <MenuAction shortcut="?" onSelect={onShortcuts}>
             Keyboard shortcuts
           </MenuAction>

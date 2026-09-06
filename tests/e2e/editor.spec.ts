@@ -121,6 +121,30 @@ test("starts a pathway figure from the expanded template library", async ({
   expect(await layerCount(page)).toBeGreaterThan(10);
 });
 
+test("uses quick actions to create scientific content", async ({ page }) => {
+  await openEditor(page);
+  await page.keyboard.press("Control+k");
+  const commands = page.getByRole("dialog", { name: "Quick actions" });
+  await expect(commands).toBeVisible();
+  await commands
+    .getByRole("combobox", { name: "Search commands" })
+    .fill("figure panel");
+  await page.keyboard.press("Enter");
+  await expect(commands).toBeHidden();
+  await page.getByRole("tab", { name: /Layers/ }).click();
+  await expect(
+    page.locator(".layer-list").getByText("Figure panel", { exact: true }),
+  ).toBeVisible();
+
+  await page.keyboard.press("Control+k");
+  await commands
+    .getByRole("combobox", { name: "Search commands" })
+    .fill("publication");
+  await expect(commands.getByRole("option").first()).toContainText(
+    "Open publication check",
+  );
+});
+
 test("returns to a recent local project from Home", async ({ page }) => {
   await openEditor(page);
   await page.getByTestId("add-rectangle").click();
