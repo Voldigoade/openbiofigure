@@ -109,6 +109,18 @@ test("starts from a structured, editable scientific template", async ({
   );
 });
 
+test("starts a pathway figure from the expanded template library", async ({
+  page,
+}) => {
+  await page.goto("/app/");
+  await page.getByRole("button", { name: /Pathway mechanism/ }).click();
+  await expect(page.getByTestId("workspace")).toBeVisible();
+  await expect(page.locator(".title-field input")).toHaveValue(
+    "Pathway mechanism",
+  );
+  expect(await layerCount(page)).toBeGreaterThan(10);
+});
+
 test("returns to a recent local project from Home", async ({ page }) => {
   await openEditor(page);
   await page.getByTestId("add-rectangle").click();

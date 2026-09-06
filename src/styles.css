@@ -364,6 +364,44 @@ svg {
 .template-microscopy i {
   background: var(--color-brand);
 }
+.template-pathway {
+  grid-template-columns: 0.7fr 1fr 0.7fr 1.1fr;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 5px;
+}
+.template-pathway i:nth-child(odd) {
+  border-radius: 50%;
+}
+.template-timeline {
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  gap: 3px;
+  padding: 7px 5px;
+  background-image: linear-gradient(
+    to bottom,
+    transparent 49%,
+    var(--color-brand-border) 49%,
+    var(--color-brand-border) 53%,
+    transparent 53%
+  );
+}
+.template-timeline i {
+  z-index: 1;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+.template-abstract {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  padding: 5px;
+}
+.template-abstract i {
+  min-height: 32px;
+}
+.template-abstract i:last-child {
+  display: none;
+}
 .start-template strong {
   align-self: end;
   font-size: 12px;

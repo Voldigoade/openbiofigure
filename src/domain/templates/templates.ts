@@ -2,7 +2,12 @@ import { createProject } from "../project/factory";
 import type { OpenBioFigureProject, ProjectObject } from "../project/schema";
 
 export type FigureTemplateId =
-  "experimental-workflow" | "comparison-panels" | "microscopy-grid";
+  | "experimental-workflow"
+  | "comparison-panels"
+  | "microscopy-grid"
+  | "pathway-mechanism"
+  | "treatment-timeline"
+  | "graphical-abstract";
 
 export interface FigureTemplate {
   id: FigureTemplateId;
@@ -10,7 +15,13 @@ export interface FigureTemplate {
   description: string;
   width: number;
   height: number;
-  preview: "workflow" | "comparison" | "microscopy";
+  preview:
+    | "workflow"
+    | "comparison"
+    | "microscopy"
+    | "pathway"
+    | "timeline"
+    | "abstract";
 }
 
 export const FIGURE_TEMPLATES: FigureTemplate[] = [
@@ -37,6 +48,30 @@ export const FIGURE_TEMPLATES: FigureTemplate[] = [
     width: 1200,
     height: 1000,
     preview: "microscopy",
+  },
+  {
+    id: "pathway-mechanism",
+    title: "Pathway mechanism",
+    description: "Signal, receptor, pathway, and cellular response",
+    width: 1600,
+    height: 900,
+    preview: "pathway",
+  },
+  {
+    id: "treatment-timeline",
+    title: "Treatment timeline",
+    description: "Editable study events across a clear time axis",
+    width: 1600,
+    height: 900,
+    preview: "timeline",
+  },
+  {
+    id: "graphical-abstract",
+    title: "Graphical abstract",
+    description: "Question, method, and finding in three concise stages",
+    width: 1800,
+    height: 1000,
+    preview: "abstract",
   },
 ];
 
@@ -103,7 +138,7 @@ function text(
     fill: "#263238",
     stroke: null,
     strokeWidth: 0,
-    fontFamily: "Arial",
+    fontFamily: "IBM Plex Sans",
     fontSize,
     fontWeight: name === "Figure title" ? 600 : 500,
     textAlign: "center",
@@ -131,12 +166,13 @@ function line(
   x: number,
   y: number,
   width: number,
+  stroke = "#ffffff",
 ): ProjectObject {
   return {
     ...common(name, x, y, width, 4),
     kind: "line",
     fill: null,
-    stroke: "#ffffff",
+    stroke,
     strokeWidth: 4,
     points: [0, 2, width, 2],
   };
@@ -195,6 +231,81 @@ function microscopyObjects(): ProjectObject[] {
   return objects;
 }
 
+function pathwayObjects(): ProjectObject[] {
+  return [
+    text("Figure title", "Signaling mechanism", 800, 85, 40),
+    text("Signal label", "Signal", 210, 320, 23),
+    ellipse("Signal", 210, 410, 120, 120, "#fae8c8"),
+    arrow("Signal to receptor", 290, 410, 180),
+    rect("Receptor", 540, 410, 190, 120, "#dff4f5"),
+    text("Receptor label", "Receptor", 540, 410, 23),
+    arrow("Receptor to kinase", 650, 410, 150),
+    ellipse("Kinase", 870, 410, 150, 110, "#e8e6f8"),
+    text("Kinase label", "Kinase", 870, 410, 22),
+    arrow("Kinase to response", 965, 410, 150),
+    rect("Response", 1240, 410, 260, 150, "#e1f1e7"),
+    text("Response label", "Cell response", 1240, 410, 23),
+    text(
+      "Mechanism note",
+      "Add regulators, evidence, and conditions",
+      800,
+      675,
+      19,
+    ),
+  ];
+}
+
+function timelineObjects(): ProjectObject[] {
+  const objects: ProjectObject[] = [
+    text("Figure title", "Treatment timeline", 800, 90, 40),
+    line("Study timeline", 190, 450, 1220, "#35545a"),
+  ];
+  const events = [
+    ["Baseline", "Day 0"],
+    ["Dose", "Day 3"],
+    ["Sample", "Day 7"],
+    ["Endpoint", "Day 14"],
+  ] as const;
+  events.forEach(([label, time], index) => {
+    const x = 260 + index * 360;
+    objects.push(ellipse(`${label} marker`, x, 450, 44, 44, "#0f766e"));
+    objects.push(text(`${label} label`, label, x, 350, 23));
+    objects.push(text(`${label} time`, time, x, 520, 18));
+    objects.push(text(`${label} note`, "Add detail", x, 590, 17));
+  });
+  return objects;
+}
+
+function graphicalAbstractObjects(): ProjectObject[] {
+  const stages = [
+    ["Question", "State the biological question", "#f7fafb"],
+    ["Method", "Show the experimental approach", "#dff4f5"],
+    ["Finding", "Summarize the main result", "#e1f1e7"],
+  ] as const;
+  const objects: ProjectObject[] = [
+    text("Figure title", "Graphical abstract", 900, 85, 42),
+  ];
+  stages.forEach(([label, caption, fill], index) => {
+    const x = 335 + index * 565;
+    objects.push(rect(`${label} stage`, x, 500, 450, 620, fill));
+    objects.push(text(`${label} heading`, label, x, 255, 29));
+    objects.push(ellipse(`${label} visual`, x, 470, 210, 180));
+    objects.push(text(`${label} caption`, caption, x, 690, 20, 360));
+    if (index < stages.length - 1)
+      objects.push(arrow(`${label} connector`, x + 250, 500, 100));
+  });
+  return objects;
+}
+
+const templateObjects: Record<FigureTemplateId, () => ProjectObject[]> = {
+  "experimental-workflow": workflowObjects,
+  "comparison-panels": comparisonObjects,
+  "microscopy-grid": microscopyObjects,
+  "pathway-mechanism": pathwayObjects,
+  "treatment-timeline": timelineObjects,
+  "graphical-abstract": graphicalAbstractObjects,
+};
+
 export function createTemplateProject(
   templateId: FigureTemplateId,
 ): OpenBioFigureProject {
@@ -206,11 +317,6 @@ export function createTemplateProject(
   });
   project.metadata.title = template.title;
   project.document.preset = `template:${template.id}`;
-  project.objects =
-    templateId === "experimental-workflow"
-      ? workflowObjects()
-      : templateId === "comparison-panels"
-        ? comparisonObjects()
-        : microscopyObjects();
+  project.objects = templateObjects[templateId]();
   return project;
 }
