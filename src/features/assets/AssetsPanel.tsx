@@ -1,14 +1,21 @@
 import {
+  Atom,
+  Bug,
+  Binary,
+  Boxes,
   ChevronDown,
   BarChart3,
   CircleDotDashed,
   Clock3,
   Dna,
   FilePlus2,
+  FlaskConical,
+  HeartPulse,
   Library,
   PanelTop,
   Ruler,
   Search,
+  ShieldCheck,
   Star,
   Upload,
   Waves,
@@ -33,12 +40,24 @@ import {
 } from "../../domain/assets/libraryState";
 import { searchAssets, type AssetFilters } from "../../domain/assets/search";
 import type { AssetMetadata } from "../../domain/assets/schema";
+import { assetTaxonomy } from "../../domain/assets/taxonomy";
 import type { ScientificElementKind } from "../../domain/scientific/elements";
 import { t, type Locale } from "../../i18n/messages";
 import { DEFAULT_ASSET_FILTERS } from "./filters";
 
 const RESULT_PAGE_SIZE = 48;
 type AssetScope = "all" | "favorites" | "recent";
+
+const topicIcons = {
+  "cells-organelles": Boxes,
+  "molecules-genetics": Atom,
+  "microbes-viruses": Bug,
+  "anatomy-organisms": HeartPulse,
+  "lab-imaging": FlaskConical,
+  "chemistry-materials": Atom,
+  "computation-data": Binary,
+  "safety-general": ShieldCheck,
+} as const;
 
 interface AssetsPanelProps {
   locale: Locale;
@@ -188,6 +207,43 @@ export function AssetsPanel({
           </button>
         ))}
       </div>
+      <details className="asset-topics">
+        <summary>
+          <span>Browse topics</span>
+          {filters.taxonomy ? (
+            <span
+              className="active-filter-dot"
+              aria-label="Topic filter active"
+            />
+          ) : null}
+          <ChevronDown aria-hidden="true" />
+        </summary>
+        <div className="asset-topic-grid">
+          {assetTaxonomy.map((topic) => {
+            const Icon = topicIcons[topic.id];
+            const active = filters.taxonomy === topic.id;
+            return (
+              <button
+                type="button"
+                key={topic.id}
+                className={active ? "active" : undefined}
+                aria-pressed={active}
+                title={topic.description}
+                onClick={() =>
+                  setFilters({
+                    ...filters,
+                    taxonomy: active ? "" : topic.id,
+                    category: "",
+                  })
+                }
+              >
+                <Icon aria-hidden="true" />
+                <span>{topic.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </details>
       <details className="science-tools">
         <summary>
           <span>{t(locale, "scientificDrawing")}</span>
@@ -235,7 +291,11 @@ export function AssetsPanel({
             <select
               value={filters.category}
               onChange={(event) =>
-                setFilters({ ...filters, category: event.currentTarget.value })
+                setFilters({
+                  ...filters,
+                  taxonomy: "",
+                  category: event.currentTarget.value,
+                })
               }
             >
               <option value="">{t(locale, "all")}</option>

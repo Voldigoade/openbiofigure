@@ -193,6 +193,25 @@ test("search an asset, add it, and inspect provenance", async ({ page }) => {
   ).toHaveAttribute("href", /bioicons/);
 });
 
+test("discovers assets through scientific topics and synonyms", async ({
+  page,
+}) => {
+  await openEditor(page);
+  await page.getByText("Browse topics", { exact: true }).click();
+  await page.getByRole("button", { name: "Cells & organelles" }).click();
+
+  const cards = page.locator(".asset-card");
+  await expect(cards.first()).toBeVisible();
+  await expect(cards.locator(".asset-card-copy > span").first()).toContainText(
+    /Cell culture|Cell lines|Cell types|Cell membrane|Intracellular components|Extracellular matrix/,
+  );
+
+  await page.getByLabel("Search scientific assets").fill("mitochondrial");
+  await expect(
+    page.getByRole("button", { name: "Add to canvas: Mitochondrion" }),
+  ).toBeVisible();
+});
+
 test("keeps favorite and recent scientific assets available locally", async ({
   page,
 }) => {
@@ -456,41 +475,82 @@ test("keeps the core local workflow available offline", async ({
 }) => {
   await openEditor(page);
   const registrationState = await page.evaluate(async () => {
+    const startedAt = performance.now();
     const manifest = document.querySelector<HTMLLinkElement>(
       'link[rel="manifest"]',
     );
     const workerUrl = new URL("sw.js", manifest?.href ?? location.href).href;
-    const registration = await navigator.serviceWorker.register(workerUrl);
-    await new Promise((resolve) => window.setTimeout(resolve, 1_000));
+    await navigator.serviceWorker.register(workerUrl);
+    const registration = await navigator.serviceWorker.ready;
+    const worker = registration.active;
+    if (worker && worker.state !== "activated") {
+      await new Promise<void>((resolve) => {
+        const onStateChange = () => {
+          if (worker.state === "activated") {
+            worker.removeEventListener("statechange", onStateChange);
+            resolve();
+          }
+        };
+        worker.addEventListener("statechange", onStateChange);
+        onStateChange();
+      });
+    }
+    const caches = await window.caches.keys();
+    const shellCache = caches.find((name) =>
+      /^openbiofigure-[a-f0-9]{16}$/.test(name),
+    );
     return {
       active: registration.active?.state ?? null,
+      activationMs: performance.now() - startedAt,
       installing: registration.installing?.state ?? null,
       waiting: registration.waiting?.state ?? null,
-      caches: await window.caches.keys(),
+      caches,
+      shellCache,
+      shellEntries: shellCache
+        ? (await (await window.caches.open(shellCache)).keys()).map(
+            (request) => request.url,
+          )
+        : [],
     };
   });
   expect(registrationState.active, JSON.stringify(registrationState)).toBe(
     "activated",
   );
+  expect(registrationState.activationMs).toBeLessThan(5_000);
+  expect(registrationState.shellCache).toMatch(/^openbiofigure-[a-f0-9]{16}$/);
   expect(
-    registrationState.caches,
-    JSON.stringify(registrationState),
+    registrationState.caches.filter((name) =>
+      /^openbiofigure-[a-f0-9]{16}$/.test(name),
+    ),
   ).toHaveLength(1);
-  const cacheName = registrationState.caches[0]!;
-  expect(cacheName).toMatch(/^openbiofigure-[a-f0-9]{16}$/);
+  expect(
+    registrationState.caches.every((name) =>
+      /^openbiofigure(?:-assets)?-[a-f0-9]{16}$/.test(name),
+    ),
+  ).toBe(true);
+  expect(registrationState.shellEntries.length).toBeLessThan(50);
+  expect(registrationState.shellEntries).not.toContainEqual(
+    expect.stringMatching(/\/assets\/[^/]+\.svg$/),
+  );
+  const shellCacheName = registrationState.shellCache!;
   await page.reload();
   await expect(page.getByTestId("workspace")).toBeVisible();
+  await addMitochondrion(page);
   const offlineState = await page.evaluate(
     async (currentCacheName) => ({
       controller: navigator.serviceWorker.controller?.scriptURL ?? null,
       entries: (await (await window.caches.open(currentCacheName)).keys()).map(
         (request) => request.url,
       ),
+      caches: await window.caches.keys(),
     }),
-    cacheName,
+    shellCacheName,
   );
   expect(offlineState, JSON.stringify(offlineState)).toMatchObject({
     controller: expect.stringContaining("/sw.js"),
+    caches: expect.arrayContaining([
+      expect.stringMatching(/^openbiofigure-assets-[a-f0-9]{16}$/),
+    ]),
   });
   await context.setOffline(true);
   const cacheProbe = await page.evaluate(async (urls) => {
@@ -505,12 +565,22 @@ test("keeps the core local workflow available offline", async ({
   expect(cacheProbe, JSON.stringify(cacheProbe)).not.toContainEqual(
     expect.objectContaining({ status: "failed" }),
   );
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", {
+      name: "Make scientific figures clear, editable, and attributable.",
+    }),
+  ).toBeVisible();
   await page.goto("/app/");
   await expect(page.getByTestId("workspace")).toBeVisible();
   await page.getByLabel("Search scientific assets").fill("mitochondria");
   await expect(
     page.getByRole("button", { name: "Add to canvas: Mitochondrion" }),
   ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Add to canvas: Mitochondrion" })
+    .click();
+  await expect(page.getByText("Provenance complete")).toBeVisible();
   await page.getByTestId("add-rectangle").click();
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("export-svg").click();

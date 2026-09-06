@@ -389,18 +389,24 @@ export function App() {
 
   const addAsset = useCallback(
     async (asset: AssetMetadata, point?: { x: number; y: number }) => {
-      const svg = sanitizeSvg(await seedProvider.loadSvg(asset)).svg;
-      const { file, integrity, ...metadata } = asset;
-      void file;
-      void integrity;
-      await editorRef.current?.addAsset(
-        { ...metadata, svg, verified: true },
-        point,
-      );
-      rememberAssetUse(asset.id);
-      setTab("licensing");
+      try {
+        const svg = sanitizeSvg(await seedProvider.loadSvg(asset)).svg;
+        const { file, integrity, ...metadata } = asset;
+        void file;
+        void integrity;
+        await editorRef.current?.addAsset(
+          { ...metadata, svg, verified: true },
+          point,
+        );
+        rememberAssetUse(asset.id);
+        setTab("licensing");
+      } catch {
+        showNotice(
+          "This asset could not be loaded. If you are offline, reconnect once to cache it or use the desktop app for the complete offline catalog.",
+        );
+      }
     },
-    [],
+    [showNotice],
   );
 
   const handleDrop = async (event: DragEvent) => {

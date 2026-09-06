@@ -865,7 +865,7 @@ svg {
 }
 .left-panel {
   display: grid;
-  grid-template-rows: auto auto auto auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto auto auto auto minmax(0, 1fr) auto;
   gap: 11px;
   padding: 16px 12px 12px;
   border-right: 1px solid var(--border);
@@ -939,10 +939,12 @@ svg {
   height: 28px;
 }
 .filters,
+.asset-topics,
 .science-tools {
   border-bottom: 1px solid var(--border);
 }
 .filters summary,
+.asset-topics summary,
 .science-tools summary {
   display: flex;
   align-items: center;
@@ -955,17 +957,67 @@ svg {
   list-style: none;
 }
 .filters summary::-webkit-details-marker,
+.asset-topics summary::-webkit-details-marker,
 .science-tools summary::-webkit-details-marker {
   display: none;
 }
 .filters[open] summary svg,
+.asset-topics[open] summary > svg,
 .science-tools[open] summary svg {
   transform: rotate(180deg);
 }
 .filters summary svg,
+.asset-topics summary > svg,
 .science-tools summary svg {
   width: 14px;
   transition: transform 120ms ease;
+}
+.asset-topics summary {
+  gap: 7px;
+}
+.asset-topics summary span:first-child {
+  margin-right: auto;
+}
+.active-filter-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.asset-topic-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding-bottom: 10px;
+}
+.asset-topic-grid button {
+  display: flex;
+  min-width: 0;
+  min-height: 34px;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--ink-subtle);
+  background: var(--color-surface-raised);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+}
+.asset-topic-grid button:hover,
+.asset-topic-grid button.active {
+  border-color: var(--color-brand-border);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.asset-topic-grid button svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
 }
 .science-tool-grid {
   display: grid;

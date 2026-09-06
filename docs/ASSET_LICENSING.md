@@ -21,13 +21,13 @@ Unknown or incomplete licensing blocks catalog validation. User-imported SVGs ma
 
 ## Verified catalog
 
-The repository distributes 410 reviewed files from [Bioicons](https://bioicons.com/): 409 under CC0-1.0 and one Servier Medical Art mitochondrion from Bioicons’ CC-BY-3.0 path. Exact URLs, upstream paths and revisions, creators, license versions, hashes, and credits are recorded in `packages/assets/catalog.json` and the repository's [third-party asset ledger](https://github.com/Voldigoade/openbiofigure/blob/main/packages/assets/THIRD_PARTY_ASSETS.md).
+The repository distributes 733 reviewed files from [Bioicons](https://bioicons.com/): 409 under CC0-1.0, 323 under CC-BY-4.0, and one Servier Medical Art mitochondrion from Bioicons’ CC-BY-3.0 path. Exact URLs, upstream paths and revisions, creators, licence versions, hashes, and credits are recorded in `packages/assets/catalog.json` and the repository's [third-party asset ledger](https://github.com/Voldigoade/openbiofigure/blob/main/packages/assets/THIRD_PARTY_ASSETS.md).
 
-The V0.2 Bioicons pipeline uses a pinned signed Git revision, a single declared license directory, a source-size limit, exact upstream metadata, an identified creator, SVG sanitization, and content deduplication. Twelve candidate files with incomplete metadata are deliberately excluded and recorded in the ingestion report. Routine validation is offline and refuses undeclared files, duplicate identifiers/content/source URLs, hash mismatches, active SVG content, and missing provenance.
+The Bioicons pipeline uses a pinned signed Git revision, explicitly allowlisted licence directories, a source-size limit, exact per-icon upstream metadata, an identified creator, SVG sanitization, and content deduplication. Seventeen candidate files are deliberately excluded and four duplicate contents are skipped in the deterministic ingestion report. Routine validation is offline and refuses undeclared files, duplicate identifiers/content/source URLs, hash mismatches, active SVG content, licence/path mismatches, and missing provenance.
 
 ## Sources for cautious future evaluation
 
-- **Bioicons:** the CC0 snapshot above is integrated; other license directories remain excluded until their obligations can be reviewed and represented safely.
+- **Bioicons:** the CC0 and CC-BY-4.0 snapshots above are integrated. Other licence directories remain excluded unless separately reviewed and represented safely.
 - **NIH/NIAID BioArt Source:** some assets are public domain while others can require attribution; verify each record.
 - **Servier Medical Art:** the current primary collection advertises CC BY 4.0, but downstream copies may carry a different specific version, as the V0.1 Bioicons asset does.
 - **SciDraw:** assets advertise CC BY 4.0; review the exact drawing and source record before redistribution.

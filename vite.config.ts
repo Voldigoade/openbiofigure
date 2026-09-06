@@ -6,31 +6,43 @@ import { resolve } from "node:path";
 import type { Plugin } from "vite";
 
 function offlinePrecacheManifest(): Plugin {
-  let generatedFiles: string[] = [];
+  let shellFiles: string[] = [];
+  let scientificAssetFiles: string[] = [];
   return {
     name: "openbiofigure-offline-precache",
     generateBundle(_options, bundle) {
-      generatedFiles = Object.values(bundle)
+      const generatedFiles = Object.values(bundle)
         .map((entry) => entry.fileName)
-        .filter((fileName) => /\.(?:css|html|js|svg|woff2)$/.test(fileName))
         .sort();
+      shellFiles = generatedFiles.filter((fileName) =>
+        /\.(?:css|html|js|woff2)$/.test(fileName),
+      );
+      scientificAssetFiles = generatedFiles.filter(
+        (fileName) =>
+          fileName.startsWith("assets/") && fileName.endsWith(".svg"),
+      );
     },
     async writeBundle(options) {
       const outputDirectory = resolve(process.cwd(), options.dir ?? "dist");
       const workerPath = resolve(outputDirectory, "sw.js");
       const template = await readFile(workerPath, "utf8");
       const cacheRevision = createHash("sha256")
-        .update(JSON.stringify(generatedFiles))
+        .update(JSON.stringify(shellFiles))
+        .digest("hex")
+        .slice(0, 16);
+      const assetCacheRevision = createHash("sha256")
+        .update(JSON.stringify(scientificAssetFiles))
         .digest("hex")
         .slice(0, 16);
       await writeFile(
         workerPath,
         template
+          .replace('["__OPENBIOFIGURE_PRECACHE__"]', JSON.stringify(shellFiles))
+          .replace("__OPENBIOFIGURE_CACHE_REVISION__", cacheRevision)
           .replace(
-            '["__OPENBIOFIGURE_PRECACHE__"]',
-            JSON.stringify(generatedFiles),
-          )
-          .replace("__OPENBIOFIGURE_CACHE_REVISION__", cacheRevision),
+            "__OPENBIOFIGURE_ASSET_CACHE_REVISION__",
+            assetCacheRevision,
+          ),
       );
     },
   };

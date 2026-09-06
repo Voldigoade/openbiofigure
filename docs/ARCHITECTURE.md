@@ -52,4 +52,4 @@ Vite builds static files to `dist/`. Scientific SVGs are emitted as separate sta
 
 Tauri 2 packages the same output for Windows with native user-selected file dialogs and no broad filesystem or shell capability. Offline NSIS and MSI installers embed WebView2. See [ADR-004](architecture/ADR-004-desktop-runtime.md) and the [desktop build guide](DESKTOP.md).
 
-The bundled Bioicons snapshot is governed by [ADR-005](architecture/ADR-005-bioicons-catalog-ingestion.md). Adding another provider requires a provider-specific ingestion policy; the normalized runtime contract remains `AssetProvider`.
+The bundled Bioicons snapshot is governed by [ADR-005](architecture/ADR-005-bioicons-catalog-ingestion.md) and its individually attributed [CC BY 4.0 expansion](architecture/ADR-006-bioicons-cc-by-4-expansion.md). Adding another provider requires a provider-specific ingestion policy; the normalized runtime contract remains `AssetProvider`.

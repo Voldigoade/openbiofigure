@@ -15,7 +15,7 @@ OpenBioFigure combines local vector composition with a provider-independent scie
 ## Current limitations
 
 - The editor is desktop-first; mobile can use Home and Settings but presents guidance instead of the full canvas workspace.
-- The verified offline catalog contains 410 Bioicons assets, but it is not a comprehensive scientific library and currently represents one provider.
+- The verified offline catalog contains 733 Bioicons assets, but it is not a comprehensive scientific library and currently represents one provider.
 - Connectors are editable straight lines without semantic anchoring or automatic routing.
 - Vector PDF, chemical structure authoring, collaboration, and optional sync are not implemented. V0.2 charts intentionally cover straightforward non-negative bar and line datasets rather than statistical analysis.
 - Imported user SVG metadata is self-declared and is flagged when incomplete or unknown.

@@ -1,6 +1,6 @@
 # Scientific assets
 
-The bundled catalog contains 410 validated Bioicons assets available offline. Search results load individual sanitized SVG files only when needed, keeping startup work bounded.
+The bundled catalog contains 733 validated Bioicons assets. All are available offline in the Windows application. The web app keeps its searchable catalog index offline and caches individual SVGs when used, rather than delaying PWA installation to download hundreds of illustrations. Search accepts common scientific variants such as “mitochondria”, “mitochondrion”, and “mitochondrial”, while topic browsing helps when you do not know an exact term.
 
 Each accepted asset has a stable ID, title, provider, source reference, creator when available, individual licence, attribution requirement, checksum, safe file path, searchable metadata, and sanitized SVG. An item with uncertain critical provenance or licensing is not admitted to the verified catalog.
 
