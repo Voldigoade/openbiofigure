@@ -53,6 +53,50 @@ test("first run presents clear local-first start actions", async ({ page }) => {
   await expect(page.getByText("No recent projects yet")).toBeVisible();
 });
 
+test("persists theme, density, and reduced-motion preferences", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("button", { name: "Appearance" }).click();
+  await page.getByRole("button", { name: "Dark" }).click();
+  await page.getByRole("button", { name: "Compact" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("html")).toHaveAttribute("data-density", "compact");
+
+  await page.getByRole("button", { name: "Accessibility" }).click();
+  await page.getByLabel("Reduce interface motion").check();
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-reduce-motion",
+    "true",
+  );
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("html")).toHaveAttribute("data-density", "compact");
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-reduce-motion",
+    "true",
+  );
+});
+
+test("creates a figure from the New figure template flow", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "New figure", exact: true }).click();
+  await page.getByRole("tab", { name: /Use a template/ }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: /Comparison A\/B/ })
+    .click();
+  await page.getByRole("button", { name: "Use template" }).click();
+
+  await expect(page.getByTestId("workspace")).toBeVisible();
+  await expect(page.locator(".title-field input")).toHaveValue(
+    "Comparison A/B",
+  );
+  expect(await layerCount(page)).toBeGreaterThan(4);
+});
+
 test("starts from a structured, editable scientific template", async ({
   page,
 }) => {
