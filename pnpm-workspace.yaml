@@ -3,3 +3,8 @@ allowBuilds:
   edgedriver: false
   esbuild: true
   geckodriver: false
+
+# VitePress 1.6.4 accepts Vite 6. Keep its private build tool on the patched
+# branch because Vite 5 has no release containing the GHSA-fx2h-pf6j-xcff fix.
+overrides:
+  vitepress>vite: ^6.4.3
