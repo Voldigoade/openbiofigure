@@ -293,9 +293,12 @@ export function AssetsPanel({
         aria-live="polite"
         aria-busy={deferredFilters !== filters}
       >
-        <p className="asset-result-summary">
-          {results.length} {t(locale, "results")}
-        </p>
+        <div className="asset-result-summary">
+          <span>
+            {results.length} {t(locale, "results")}
+          </span>
+          <span>Drag or double-click to insert</span>
+        </div>
         {visibleResults.map((asset) => (
           <article
             className="asset-card"
@@ -316,8 +319,8 @@ export function AssetsPanel({
             <div className="asset-card-copy">
               <strong>{asset.title}</strong>
               <span>{asset.category}</span>
-              <small>
-                {asset.license.id}
+              <small title={`${asset.source.provider} · ${asset.license.name}`}>
+                {asset.source.provider} · {asset.license.id}
                 {asset.license.attributionRequired ? " · credit" : ""}
               </small>
             </div>

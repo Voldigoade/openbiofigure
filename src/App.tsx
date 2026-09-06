@@ -45,6 +45,12 @@ import { createProject } from "./domain/project/factory";
 import { ProjectHistory } from "./domain/project/history";
 import { migrateProject } from "./domain/project/migrations";
 import type { OpenBioFigureProject } from "./domain/project/schema";
+import {
+  applyAppearancePreferences,
+  loadPreferences,
+  savePreferences,
+  type AppPreferences,
+} from "./domain/preferences/preferences";
 import { createTemplateProject } from "./domain/templates/templates";
 import { buildPublicationReport } from "./domain/publication/preflight";
 import {
@@ -74,30 +80,6 @@ const AssetsPanel = lazy(async () => ({
 
 type AppView = "home" | "editor" | "settings";
 
-interface AppPreferences {
-  gridSize: number;
-  snapToGrid: boolean;
-}
-
-function loadPreferences(): AppPreferences {
-  try {
-    const value = JSON.parse(
-      window.localStorage.getItem("openbiofigure:preferences:v1") ?? "{}",
-    ) as Partial<AppPreferences>;
-    return {
-      gridSize:
-        Number.isInteger(value.gridSize) &&
-        Number(value.gridSize) >= 2 &&
-        Number(value.gridSize) <= 200
-          ? Number(value.gridSize)
-          : 20,
-      snapToGrid: value.snapToGrid === true,
-    };
-  } catch {
-    return { gridSize: 20, snapToGrid: false };
-  }
-}
-
 function rememberAssetUse(assetId: string) {
   try {
     const state = loadAssetLibraryState(window.localStorage);
@@ -120,7 +102,9 @@ export function App() {
   const [autosaveProject, setAutosaveProject] =
     useState<OpenBioFigureProject | null>(null);
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
-  const [preferences, setPreferences] = useState(loadPreferences);
+  const [preferences, setPreferences] = useState(() =>
+    loadPreferences(window.localStorage),
+  );
   const [selection, setSelection] = useState<SelectionSnapshot | null>(null);
   const [layers, setLayers] = useState<LayerSnapshot[]>([]);
   const [filters, setFilters] = useState(DEFAULT_ASSET_FILTERS);
@@ -132,7 +116,7 @@ export function App() {
   const [shortcutsDialog, setShortcutsDialog] = useState(false);
   const [chartDialog, setChartDialog] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
-  const [exportScale, setExportScale] = useState(2);
+  const [exportScale, setExportScale] = useState(preferences.pngExportScale);
   const [notice, setNotice] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -140,6 +124,7 @@ export function App() {
   const editorRef = useRef<FabricEditor | null>(null);
   const historyRef = useRef(new ProjectHistory(project));
   const initialProjectRef = useRef(project);
+  const initialPreferencesRef = useRef(preferences);
   const applyingHistory = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
   const openProjectRef = useRef<HTMLInputElement>(null);
@@ -197,7 +182,11 @@ export function App() {
         setAutosaveProject(saved);
         setRecentProjects(await storage.listRecent());
         historyRef.current = new ProjectHistory(restored);
-        if (saved && window.sessionStorage.getItem(ACTIVE_SESSION_KEY)) {
+        if (
+          saved &&
+          (window.sessionStorage.getItem(ACTIVE_SESSION_KEY) ||
+            initialPreferencesRef.current.startup === "reopen")
+        ) {
           setView("editor");
         }
         setReady(true);
@@ -229,11 +218,13 @@ export function App() {
   }, [ready, view, handleSnapshot]);
 
   useEffect(() => {
-    window.localStorage.setItem(
-      "openbiofigure:preferences:v1",
-      JSON.stringify(preferences),
-    );
+    savePreferences(window.localStorage, preferences);
+    applyAppearancePreferences(preferences);
   }, [preferences]);
+
+  useEffect(() => {
+    setExportScale(preferences.pngExportScale);
+  }, [preferences.pngExportScale]);
 
   useEffect(() => {
     const protectUnsavedChanges = (event: BeforeUnloadEvent) => {
@@ -655,7 +646,16 @@ export function App() {
     <>
       {newDialog && (
         <NewDocumentDialog
+          initialPreset={preferences.defaultPreset}
           onClose={() => setNewDialog(false)}
+          onCreateTemplate={(templateId) => {
+            void activateProject(
+              applyPreferences(createTemplateProject(templateId)),
+            ).then(() => {
+              setNewDialog(false);
+              window.requestAnimationFrame(fitToScreen);
+            });
+          }}
           onCreate={(preset, width, height) => {
             const next = applyPreferences(
               createProject(preset, { width, height }),
@@ -710,7 +710,7 @@ export function App() {
       <>
         <StartScreen
           autosave={autosaveProject}
-          recent={recentProjects}
+          recent={recentProjects.slice(0, preferences.recentProjectCount)}
           onNew={() => setNewDialog(true)}
           onOpen={requestOpenProject}
           onContinue={() =>
@@ -737,19 +737,17 @@ export function App() {
     return (
       <>
         <SettingsScreen
-          gridSize={preferences.gridSize}
-          snapToGrid={preferences.snapToGrid}
+          initialSection={
+            settingsReturnView === "editor" ? "editor" : "general"
+          }
+          preferences={preferences}
           recentCount={recentProjects.length}
           onBack={() => {
             if (settingsReturnView === "editor") void activateProject(project);
             else setView("home");
           }}
-          onGridSizeChange={(gridSize) => {
-            if (Number.isInteger(gridSize) && gridSize >= 2 && gridSize <= 200)
-              setPreferences((current) => ({ ...current, gridSize }));
-          }}
-          onSnapChange={(snapToGrid) =>
-            setPreferences((current) => ({ ...current, snapToGrid }))
+          onPreferencesChange={(updates: Partial<AppPreferences>) =>
+            setPreferences((current) => ({ ...current, ...updates }))
           }
           onClearRecent={() => {
             void storage.clearRecent().then(refreshRecent);
@@ -818,7 +816,13 @@ export function App() {
           next.metadata.updatedAt = new Date().toISOString();
           void replaceProject(next, false);
         }}
-        onExportScaleChange={setExportScale}
+        onExportScaleChange={(pngExportScale) => {
+          if (![1, 2, 3, 4].includes(pngExportScale)) return;
+          setPreferences((current) => ({
+            ...current,
+            pngExportScale: pngExportScale as AppPreferences["pngExportScale"],
+          }));
+        }}
         onExportSvg={() => void exportSvg()}
         onExportPng={() => void exportPng()}
       />

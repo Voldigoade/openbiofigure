@@ -20,7 +20,7 @@ test.afterEach(({ page }) => {
 });
 
 async function openEditor(page: Page) {
-  await page.goto("/");
+  await page.goto("/app/");
   const newFigure = page.getByRole("button", {
     name: "New figure",
     exact: true,
@@ -37,7 +37,7 @@ async function openEditor(page: Page) {
 }
 
 test("first run presents clear local-first start actions", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/app/");
   await expect(
     page.getByRole("heading", { name: "Create an editable scientific figure" }),
   ).toBeVisible();
@@ -53,10 +53,54 @@ test("first run presents clear local-first start actions", async ({ page }) => {
   await expect(page.getByText("No recent projects yet")).toBeVisible();
 });
 
+test("persists theme, density, and reduced-motion preferences", async ({
+  page,
+}) => {
+  await page.goto("/app/");
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("button", { name: "Appearance" }).click();
+  await page.getByRole("button", { name: "Dark" }).click();
+  await page.getByRole("button", { name: "Compact" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("html")).toHaveAttribute("data-density", "compact");
+
+  await page.getByRole("button", { name: "Accessibility" }).click();
+  await page.getByLabel("Reduce interface motion").check();
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-reduce-motion",
+    "true",
+  );
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("html")).toHaveAttribute("data-density", "compact");
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-reduce-motion",
+    "true",
+  );
+});
+
+test("creates a figure from the New figure template flow", async ({ page }) => {
+  await page.goto("/app/");
+  await page.getByRole("button", { name: "New figure", exact: true }).click();
+  await page.getByRole("tab", { name: /Use a template/ }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: /Comparison A\/B/ })
+    .click();
+  await page.getByRole("button", { name: "Use template" }).click();
+
+  await expect(page.getByTestId("workspace")).toBeVisible();
+  await expect(page.locator(".title-field input")).toHaveValue(
+    "Comparison A/B",
+  );
+  expect(await layerCount(page)).toBeGreaterThan(4);
+});
+
 test("starts from a structured, editable scientific template", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/app/");
   await page.getByRole("button", { name: /Experimental workflow/ }).click();
   await expect(page.getByTestId("workspace")).toBeVisible();
   expect(await layerCount(page)).toBeGreaterThan(10);
@@ -110,7 +154,8 @@ test("create a document, add core objects, and save a project file", async ({
   await page.getByTestId("add-rectangle").click();
   await page.getByRole("button", { name: "Add text" }).click();
   await page.getByRole("button", { name: "Add arrow" }).click();
-  await page.getByRole("button", { name: "Add connector" }).click();
+  await page.getByRole("button", { name: "More drawing tools" }).click();
+  await page.getByRole("menuitem", { name: "Add connector" }).click();
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("save-project").click();
   const download = await downloadPromise;
@@ -411,7 +456,11 @@ test("keeps the core local workflow available offline", async ({
 }) => {
   await openEditor(page);
   const registrationState = await page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.register("./sw.js");
+    const manifest = document.querySelector<HTMLLinkElement>(
+      'link[rel="manifest"]',
+    );
+    const workerUrl = new URL("sw.js", manifest?.href ?? location.href).href;
+    const registration = await navigator.serviceWorker.register(workerUrl);
     await new Promise((resolve) => window.setTimeout(resolve, 1_000));
     return {
       active: registration.active?.state ?? null,
@@ -456,7 +505,7 @@ test("keeps the core local workflow available offline", async ({
   expect(cacheProbe, JSON.stringify(cacheProbe)).not.toContainEqual(
     expect.objectContaining({ status: "failed" }),
   );
-  await page.goto("/");
+  await page.goto("/app/");
   await expect(page.getByTestId("workspace")).toBeVisible();
   await page.getByLabel("Search scientific assets").fill("mitochondria");
   await expect(

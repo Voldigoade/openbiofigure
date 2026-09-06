@@ -33,8 +33,12 @@ export function PropertyInspector({
   if (!selection)
     return (
       <div className="empty-state compact">
-        <MousePointer2 />
-        <p>Select an object to edit its properties.</p>
+        <span className="empty-state-icon">
+          <MousePointer2 />
+        </span>
+        <strong>Nothing selected</strong>
+        <p>Select an object on the canvas to edit its position and style.</p>
+        <small>Shift-click to select multiple objects.</small>
       </div>
     );
 
@@ -151,9 +155,13 @@ export function PropertyInspector({
                   onUpdate({ fontFamily: event.currentTarget.value })
                 }
               >
-                <option value="Inter, Arial, sans-serif">Inter / Arial</option>
-                <option value="Georgia, serif">Georgia</option>
-                <option value="'Courier New', monospace">Courier New</option>
+                <option value="IBM Plex Sans, Arial, sans-serif">
+                  IBM Plex Sans
+                </option>
+                <option value="STIX Two Text, Georgia, serif">
+                  STIX Two Text
+                </option>
+                <option value="IBM Plex Mono, monospace">IBM Plex Mono</option>
               </select>
             </FormField>
             <FormField label="Font size">

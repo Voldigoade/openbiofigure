@@ -1,8 +1,13 @@
 import {
   ArrowRight,
+  ArrowUpRight,
+  Check,
   FilePlus2,
   FolderOpen,
+  Github,
+  Search,
   Settings,
+  Shapes,
   Trash2,
 } from "lucide-react";
 import type { RecentProject } from "../domain/storage/projectStorage";
@@ -41,50 +46,103 @@ export function StartScreen({
     <main className="start-screen">
       <header className="start-header">
         <Brand />
-        <button className="button quiet" type="button" onClick={onSettings}>
-          <Settings /> Settings
-        </button>
+        <div className="start-header-actions">
+          <a
+            className="button quiet"
+            href="https://github.com/Voldigoade/openbiofigure"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Github /> Source code
+          </a>
+          <button className="button quiet" type="button" onClick={onSettings}>
+            <Settings /> Settings
+          </button>
+        </div>
       </header>
 
       <div className="start-content">
-        <section className="start-intro" aria-labelledby="start-title">
-          <p className="eyebrow">Scientific figure editor</p>
-          <h1 id="start-title">Create an editable scientific figure</h1>
-          <p>
-            Compose vector graphics, keep asset provenance attached, and export
-            locally. No account or network connection is required.
-          </p>
-          <div className="start-actions">
-            <button
-              className="button primary large"
-              type="button"
-              onClick={onNew}
-            >
-              <FilePlus2 /> New figure
-            </button>
-            <button
-              className="button secondary large"
-              type="button"
-              onClick={onOpen}
-            >
-              <FolderOpen /> Open project
-            </button>
-          </div>
-          {autosave && (
-            <button
-              className="continue-card"
-              type="button"
-              onClick={onContinue}
-            >
-              <span>
-                <small>Continue where you left off</small>
-                <strong>{autosave.metadata.title}</strong>
-                <span>{projectDimensions(autosave)}</span>
-              </span>
-              <ArrowRight aria-hidden="true" />
-            </button>
-          )}
-        </section>
+        <div className="start-hero-layout">
+          <section className="start-intro" aria-labelledby="start-title">
+            <p className="eyebrow">Open scientific figure editor</p>
+            <h1 id="start-title">Create an editable scientific figure</h1>
+            <p>
+              Build clear vector figures with reusable scientific assets. Keep
+              provenance attached and export locally—without an account.
+            </p>
+            <div className="start-actions">
+              <button
+                className="button primary large"
+                type="button"
+                onClick={onNew}
+              >
+                <FilePlus2 /> New figure
+              </button>
+              <button
+                className="button secondary large"
+                type="button"
+                onClick={onOpen}
+              >
+                <FolderOpen /> Open project
+              </button>
+            </div>
+            <p className="start-trust-line">
+              <Check aria-hidden="true" /> Local-first
+              <span aria-hidden="true">·</span>
+              <Check aria-hidden="true" /> Works offline
+              <span aria-hidden="true">·</span>
+              <Check aria-hidden="true" /> No telemetry
+            </p>
+          </section>
+
+          <aside className="start-companion" aria-label="Getting started">
+            {autosave ? (
+              <>
+                <p className="eyebrow">Continue your work</p>
+                <button
+                  className="continue-card"
+                  type="button"
+                  onClick={onContinue}
+                >
+                  <span className="recent-thumbnail" aria-hidden="true" />
+                  <span>
+                    <strong>{autosave.metadata.title}</strong>
+                    <small>{projectDimensions(autosave)}</small>
+                    <span>Saved locally</span>
+                  </span>
+                  <ArrowRight aria-hidden="true" />
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="eyebrow">Your first figure</p>
+                <ol className="start-steps">
+                  <li>
+                    <Shapes aria-hidden="true" />
+                    <span>
+                      <strong>Choose a starting point</strong>
+                      <small>Blank canvas or editable template</small>
+                    </span>
+                  </li>
+                  <li>
+                    <Search aria-hidden="true" />
+                    <span>
+                      <strong>Find scientific assets</strong>
+                      <small>Search the verified offline catalog</small>
+                    </span>
+                  </li>
+                  <li>
+                    <ArrowUpRight aria-hidden="true" />
+                    <span>
+                      <strong>Export with confidence</strong>
+                      <small>SVG, PNG, and attribution report</small>
+                    </span>
+                  </li>
+                </ol>
+              </>
+            )}
+          </aside>
+        </div>
 
         <section className="start-section" aria-labelledby="templates-title">
           <div className="section-heading">
@@ -134,11 +192,16 @@ export function StartScreen({
           </div>
           {recent.length === 0 ? (
             <div className="empty-state">
-              <FolderOpen aria-hidden="true" />
+              <span className="empty-state-icon">
+                <FolderOpen aria-hidden="true" />
+              </span>
               <div>
                 <strong>No recent projects yet</strong>
-                <p>Your recent local projects will appear here.</p>
+                <p>Create a figure or open a project to see it here.</p>
               </div>
+              <button className="button quiet" type="button" onClick={onNew}>
+                Create your first figure <ArrowRight />
+              </button>
             </div>
           ) : (
             <ul className="recent-list">

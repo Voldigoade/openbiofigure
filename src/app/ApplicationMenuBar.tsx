@@ -214,7 +214,7 @@ export function ApplicationMenuBar({
           </MenuAction>
           <a
             role="menuitem"
-            href="https://github.com/Voldigoade/openbiofigure#readme"
+            href="https://voldigoade.github.io/openbiofigure/docs/"
             target="_blank"
             rel="noreferrer"
           >

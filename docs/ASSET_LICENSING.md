@@ -21,7 +21,7 @@ Unknown or incomplete licensing blocks catalog validation. User-imported SVGs ma
 
 ## Verified catalog
 
-The repository distributes 410 reviewed files from [Bioicons](https://bioicons.com/): 409 under CC0-1.0 and one Servier Medical Art mitochondrion from Bioicons’ CC-BY-3.0 path. Exact URLs, upstream paths and revisions, creators, license versions, hashes, and credits are recorded in `packages/assets/catalog.json` and [THIRD_PARTY_ASSETS.md](../packages/assets/THIRD_PARTY_ASSETS.md).
+The repository distributes 410 reviewed files from [Bioicons](https://bioicons.com/): 409 under CC0-1.0 and one Servier Medical Art mitochondrion from Bioicons’ CC-BY-3.0 path. Exact URLs, upstream paths and revisions, creators, license versions, hashes, and credits are recorded in `packages/assets/catalog.json` and the repository's [third-party asset ledger](https://github.com/Voldigoade/openbiofigure/blob/main/packages/assets/THIRD_PARTY_ASSETS.md).
 
 The V0.2 Bioicons pipeline uses a pinned signed Git revision, a single declared license directory, a source-size limit, exact upstream metadata, an identified creator, SVG sanitization, and content deduplication. Twelve candidate files with incomplete metadata are deliberately excluded and recorded in the ingestion report. Routine validation is offline and refuses undeclared files, duplicate identifiers/content/source URLs, hash mismatches, active SVG content, and missing provenance.
 
