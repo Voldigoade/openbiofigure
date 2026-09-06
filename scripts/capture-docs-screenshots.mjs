@@ -23,6 +23,7 @@ try {
 
   await page.getByRole("button", { name: "New figure", exact: true }).click();
   await page.getByRole("dialog").waitFor();
+  await page.waitForTimeout(250);
   await page.screenshot({ path: path.join(outputDir, "new-figure.png") });
   await page.getByRole("button", { name: "Close dialog" }).click();
 
@@ -33,6 +34,8 @@ try {
   await page.getByRole("button", { name: /Back to OpenBioFigure/ }).click();
   await page.getByRole("button", { name: /Experimental workflow/ }).click();
   await page.getByTestId("workspace").waitFor();
+  await page.getByRole("heading", { name: "Assets" }).waitFor();
+  await page.locator(".asset-card").first().waitFor();
   await page.screenshot({ path: path.join(outputDir, "editor.png") });
 } finally {
   await browser.close();

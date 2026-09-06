@@ -15,6 +15,7 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "docs:screenshots": "node scripts/capture-docs-screenshots.mjs",
+    "editor:screenshots": "node scripts/capture-editor-qa.mjs",
     "preview": "vite preview",
     "tauri": "tauri",
     "desktop:dev": "tauri dev",

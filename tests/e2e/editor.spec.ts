@@ -154,7 +154,8 @@ test("create a document, add core objects, and save a project file", async ({
   await page.getByTestId("add-rectangle").click();
   await page.getByRole("button", { name: "Add text" }).click();
   await page.getByRole("button", { name: "Add arrow" }).click();
-  await page.getByRole("button", { name: "Add connector" }).click();
+  await page.getByRole("button", { name: "More drawing tools" }).click();
+  await page.getByRole("menuitem", { name: "Add connector" }).click();
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("save-project").click();
   const download = await downloadPromise;
