@@ -3,14 +3,14 @@ import { SiteHeader } from "./SiteHeader";
 import "./site.css";
 
 const releaseBase =
-  "https://github.com/Voldigoade/openbiofigure/releases/download/v0.2.1";
+  "https://github.com/Voldigoade/openbiofigure/releases/download/v0.3.0";
 
 export function DownloadPage() {
   return (
     <main className="product-site download-site">
       <SiteHeader base=".." />
       <section className="download-hero">
-        <p className="eyebrow">OpenBioFigure v0.2.1</p>
+        <p className="eyebrow">OpenBioFigure v0.3.0</p>
         <h1>Download for Windows</h1>
         <p>
           Install the offline desktop editor. No account or network connection
@@ -18,11 +18,11 @@ export function DownloadPage() {
         </p>
         <a
           className="button primary large"
-          href={`${releaseBase}/OpenBioFigure_0.2.1_x64-setup.exe`}
+          href={`${releaseBase}/OpenBioFigure_0.3.0_x64-setup.exe`}
         >
           <Download /> Download Windows installer
         </a>
-        <span>Windows 10/11 · x64 · 253 MB</span>
+        <span>Windows 10/11 · x64</span>
       </section>
       <section className="download-details">
         <article>
@@ -56,8 +56,8 @@ export function DownloadPage() {
               An MSI package and all provenance files remain available on GitHub
               Releases.
             </p>
-            <a href="https://github.com/Voldigoade/openbiofigure/releases/tag/v0.2.1">
-              View all v0.2.1 files <ArrowRight />
+            <a href="https://github.com/Voldigoade/openbiofigure/releases/tag/v0.3.0">
+              View all v0.3.0 files <ArrowRight />
             </a>
           </div>
         </article>

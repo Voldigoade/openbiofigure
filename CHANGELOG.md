@@ -4,6 +4,26 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-07
+
+### Added
+
+- Locally bundled IBM Plex Sans, IBM Plex Mono, and STIX Two Text with a semantic light/dark design system and persisted appearance preferences.
+- Product homepage, routed web editor, Windows download page, and self-hosted VitePress documentation portal with local full-text search.
+- Six original editable figure templates, including pathway, treatment timeline, and graphical abstract starting points.
+- Scientific topic browsing and synonym-aware local search across 733 verified Bioicons assets.
+- Searchable keyboard-first Quick actions for common document, creation, catalog, publication, and export workflows.
+
+### Changed
+
+- Redesigned Home, New Figure, Settings, editor shell, toolbar, asset panel, inspector, layers, dialogs, and status feedback for clearer first-use workflows.
+- Expanded the verified catalog to 409 CC0-1.0, 323 CC-BY-4.0, and one separately reviewed CC-BY-3.0 asset.
+- Limited PWA installation to a small application-shell precache and moved scientific SVGs to a bounded on-demand runtime cache.
+
+### Security
+
+- Preserved native Windows rendering gates, source/privacy checks, per-asset SVG sanitization, provenance validation, and CI-only release artifacts.
+
 ## [0.2.1] - 2026-09-05
 
 ### Fixed

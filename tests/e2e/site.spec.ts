@@ -34,7 +34,7 @@ test("serves a focused download page with the official installer", async ({
     page.getByRole("link", { name: "Download Windows installer" }),
   ).toHaveAttribute(
     "href",
-    "https://github.com/Voldigoade/openbiofigure/releases/download/v0.2.1/OpenBioFigure_0.2.1_x64-setup.exe",
+    "https://github.com/Voldigoade/openbiofigure/releases/download/v0.3.0/OpenBioFigure_0.3.0_x64-setup.exe",
   );
   await expect(
     page.getByRole("link", { name: /Verify checksums and attestations/ }),

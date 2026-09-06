@@ -24,7 +24,7 @@ describe("OpenBioFigure desktop", () => {
     await workspace.waitForDisplayed();
     await expect(workspace).toBeDisplayed();
 
-    expect(await browser.getUrl()).toContain("desktop-recovery=0.2.1");
+    expect(await browser.getUrl()).toContain("desktop-recovery=0.3.0");
 
     const assetSearch = $("aria/Search scientific assets");
     await assetSearch.waitForDisplayed();

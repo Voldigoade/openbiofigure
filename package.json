@@ -1,6 +1,6 @@
 {
   "name": "openbiofigure",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "description": "Local-first, attribution-aware scientific figure editor.",
   "type": "module",

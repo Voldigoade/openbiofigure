@@ -12,7 +12,7 @@ export function Brand({ compact = false }: BrandProps) {
         <Minus />
       </span>
       <strong>OpenBioFigure</strong>
-      {!compact && <span className="version">v0.2.1</span>}
+      {!compact && <span className="version">v0.3.0</span>}
     </div>
   );
 }

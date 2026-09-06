@@ -462,7 +462,7 @@ export function SettingsScreen({
               <div className="about-product">
                 <Brand />
                 <div>
-                  <h3 id="about-title">OpenBioFigure v0.2.1</h3>
+                  <h3 id="about-title">OpenBioFigure v0.3.0</h3>
                   <p>
                     Open-source scientific figure editing with local workflows
                     and provenance-aware assets.
