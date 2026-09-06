@@ -32,53 +32,59 @@ export function LayersPanel({
     );
 
   return (
-    <div className="layer-list">
-      {layers.map((layer, index) => (
-        <div
-          className={`layer-row${layer.selected ? " is-selected" : ""}`}
-          key={layer.id}
-        >
-          <button
-            type="button"
-            className="layer-main"
-            onClick={() => onSelect(layer.id)}
+    <div className="layer-panel-content">
+      <div className="layer-list-heading">
+        <span>{layers.length} layers</span>
+        <small>Front to back</small>
+      </div>
+      <div className="layer-list">
+        {layers.map((layer, index) => (
+          <div
+            className={`layer-row${layer.selected ? " is-selected" : ""}`}
+            key={layer.id}
           >
-            <span className={`kind-dot kind-${layer.kind}`} />
-            <span>
-              <strong>{layer.name}</strong>
-              <small>{layer.kind}</small>
+            <button
+              type="button"
+              className="layer-main"
+              onClick={() => onSelect(layer.id)}
+            >
+              <span className={`kind-dot kind-${layer.kind}`} />
+              <span>
+                <strong>{layer.name}</strong>
+                <small>{layer.kind}</small>
+              </span>
+            </button>
+            <IconButton
+              label={`${layer.visible ? "Hide" : "Show"} ${layer.name}`}
+              onClick={() => onToggle(layer.id, "visible")}
+            >
+              {layer.visible ? <Eye /> : <EyeOff />}
+            </IconButton>
+            <IconButton
+              label={`${layer.locked ? "Unlock" : "Lock"} ${layer.name}`}
+              onClick={() => onToggle(layer.id, "locked")}
+            >
+              {layer.locked ? <Lock /> : <Unlock />}
+            </IconButton>
+            <span className="layer-move">
+              <IconButton
+                label={`Move ${layer.name} up`}
+                onClick={() => onMove(layer.id, "up")}
+                disabled={index === 0}
+              >
+                <ArrowUp />
+              </IconButton>
+              <IconButton
+                label={`Move ${layer.name} down`}
+                onClick={() => onMove(layer.id, "down")}
+                disabled={index === layers.length - 1}
+              >
+                <ArrowDown />
+              </IconButton>
             </span>
-          </button>
-          <IconButton
-            label={`${layer.visible ? "Hide" : "Show"} ${layer.name}`}
-            onClick={() => onToggle(layer.id, "visible")}
-          >
-            {layer.visible ? <Eye /> : <EyeOff />}
-          </IconButton>
-          <IconButton
-            label={`${layer.locked ? "Unlock" : "Lock"} ${layer.name}`}
-            onClick={() => onToggle(layer.id, "locked")}
-          >
-            {layer.locked ? <Lock /> : <Unlock />}
-          </IconButton>
-          <span className="layer-move">
-            <IconButton
-              label={`Move ${layer.name} up`}
-              onClick={() => onMove(layer.id, "up")}
-              disabled={index === 0}
-            >
-              <ArrowUp />
-            </IconButton>
-            <IconButton
-              label={`Move ${layer.name} down`}
-              onClick={() => onMove(layer.id, "down")}
-              disabled={index === layers.length - 1}
-            >
-              <ArrowDown />
-            </IconButton>
-          </span>
-        </div>
-      ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

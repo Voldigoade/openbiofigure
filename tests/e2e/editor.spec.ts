@@ -20,7 +20,7 @@ test.afterEach(({ page }) => {
 });
 
 async function openEditor(page: Page) {
-  await page.goto("/");
+  await page.goto("/app/");
   const newFigure = page.getByRole("button", {
     name: "New figure",
     exact: true,
@@ -37,7 +37,7 @@ async function openEditor(page: Page) {
 }
 
 test("first run presents clear local-first start actions", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/app/");
   await expect(
     page.getByRole("heading", { name: "Create an editable scientific figure" }),
   ).toBeVisible();
@@ -53,15 +53,95 @@ test("first run presents clear local-first start actions", async ({ page }) => {
   await expect(page.getByText("No recent projects yet")).toBeVisible();
 });
 
+test("persists theme, density, and reduced-motion preferences", async ({
+  page,
+}) => {
+  await page.goto("/app/");
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByRole("button", { name: "Appearance" }).click();
+  await page.getByRole("button", { name: "Dark" }).click();
+  await page.getByRole("button", { name: "Compact" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("html")).toHaveAttribute("data-density", "compact");
+
+  await page.getByRole("button", { name: "Accessibility" }).click();
+  await page.getByLabel("Reduce interface motion").check();
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-reduce-motion",
+    "true",
+  );
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("html")).toHaveAttribute("data-density", "compact");
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-reduce-motion",
+    "true",
+  );
+});
+
+test("creates a figure from the New figure template flow", async ({ page }) => {
+  await page.goto("/app/");
+  await page.getByRole("button", { name: "New figure", exact: true }).click();
+  await page.getByRole("tab", { name: /Use a template/ }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: /Comparison A\/B/ })
+    .click();
+  await page.getByRole("button", { name: "Use template" }).click();
+
+  await expect(page.getByTestId("workspace")).toBeVisible();
+  await expect(page.locator(".title-field input")).toHaveValue(
+    "Comparison A/B",
+  );
+  expect(await layerCount(page)).toBeGreaterThan(4);
+});
+
 test("starts from a structured, editable scientific template", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/app/");
   await page.getByRole("button", { name: /Experimental workflow/ }).click();
   await expect(page.getByTestId("workspace")).toBeVisible();
   expect(await layerCount(page)).toBeGreaterThan(10);
   await expect(page.locator(".title-field input")).toHaveValue(
     "Experimental workflow",
+  );
+});
+
+test("starts a pathway figure from the expanded template library", async ({
+  page,
+}) => {
+  await page.goto("/app/");
+  await page.getByRole("button", { name: /Pathway mechanism/ }).click();
+  await expect(page.getByTestId("workspace")).toBeVisible();
+  await expect(page.locator(".title-field input")).toHaveValue(
+    "Pathway mechanism",
+  );
+  expect(await layerCount(page)).toBeGreaterThan(10);
+});
+
+test("uses quick actions to create scientific content", async ({ page }) => {
+  await openEditor(page);
+  await page.keyboard.press("Control+k");
+  const commands = page.getByRole("dialog", { name: "Quick actions" });
+  await expect(commands).toBeVisible();
+  await commands
+    .getByRole("combobox", { name: "Search commands" })
+    .fill("figure panel");
+  await page.keyboard.press("Enter");
+  await expect(commands).toBeHidden();
+  await page.getByRole("tab", { name: /Layers/ }).click();
+  await expect(
+    page.locator(".layer-list").getByText("Figure panel", { exact: true }),
+  ).toBeVisible();
+
+  await page.keyboard.press("Control+k");
+  await commands
+    .getByRole("combobox", { name: "Search commands" })
+    .fill("publication");
+  await expect(commands.getByRole("option").first()).toContainText(
+    "Open publication check",
   );
 });
 
@@ -110,7 +190,8 @@ test("create a document, add core objects, and save a project file", async ({
   await page.getByTestId("add-rectangle").click();
   await page.getByRole("button", { name: "Add text" }).click();
   await page.getByRole("button", { name: "Add arrow" }).click();
-  await page.getByRole("button", { name: "Add connector" }).click();
+  await page.getByRole("button", { name: "More drawing tools" }).click();
+  await page.getByRole("menuitem", { name: "Add connector" }).click();
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("save-project").click();
   const download = await downloadPromise;
@@ -146,6 +227,25 @@ test("search an asset, add it, and inspect provenance", async ({ page }) => {
   await expect(
     page.getByRole("link", { name: "Original source" }),
   ).toHaveAttribute("href", /bioicons/);
+});
+
+test("discovers assets through scientific topics and synonyms", async ({
+  page,
+}) => {
+  await openEditor(page);
+  await page.getByText("Browse topics", { exact: true }).click();
+  await page.getByRole("button", { name: "Cells & organelles" }).click();
+
+  const cards = page.locator(".asset-card");
+  await expect(cards.first()).toBeVisible();
+  await expect(cards.locator(".asset-card-copy > span").first()).toContainText(
+    /Cell culture|Cell lines|Cell types|Cell membrane|Intracellular components|Extracellular matrix/,
+  );
+
+  await page.getByLabel("Search scientific assets").fill("mitochondrial");
+  await expect(
+    page.getByRole("button", { name: "Add to canvas: Mitochondrion" }),
+  ).toBeVisible();
 });
 
 test("keeps favorite and recent scientific assets available locally", async ({
@@ -411,37 +511,82 @@ test("keeps the core local workflow available offline", async ({
 }) => {
   await openEditor(page);
   const registrationState = await page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.register("./sw.js");
-    await new Promise((resolve) => window.setTimeout(resolve, 1_000));
+    const startedAt = performance.now();
+    const manifest = document.querySelector<HTMLLinkElement>(
+      'link[rel="manifest"]',
+    );
+    const workerUrl = new URL("sw.js", manifest?.href ?? location.href).href;
+    await navigator.serviceWorker.register(workerUrl);
+    const registration = await navigator.serviceWorker.ready;
+    const worker = registration.active;
+    if (worker && worker.state !== "activated") {
+      await new Promise<void>((resolve) => {
+        const onStateChange = () => {
+          if (worker.state === "activated") {
+            worker.removeEventListener("statechange", onStateChange);
+            resolve();
+          }
+        };
+        worker.addEventListener("statechange", onStateChange);
+        onStateChange();
+      });
+    }
+    const caches = await window.caches.keys();
+    const shellCache = caches.find((name) =>
+      /^openbiofigure-[a-f0-9]{16}$/.test(name),
+    );
     return {
       active: registration.active?.state ?? null,
+      activationMs: performance.now() - startedAt,
       installing: registration.installing?.state ?? null,
       waiting: registration.waiting?.state ?? null,
-      caches: await window.caches.keys(),
+      caches,
+      shellCache,
+      shellEntries: shellCache
+        ? (await (await window.caches.open(shellCache)).keys()).map(
+            (request) => request.url,
+          )
+        : [],
     };
   });
   expect(registrationState.active, JSON.stringify(registrationState)).toBe(
     "activated",
   );
+  expect(registrationState.activationMs).toBeLessThan(5_000);
+  expect(registrationState.shellCache).toMatch(/^openbiofigure-[a-f0-9]{16}$/);
   expect(
-    registrationState.caches,
-    JSON.stringify(registrationState),
+    registrationState.caches.filter((name) =>
+      /^openbiofigure-[a-f0-9]{16}$/.test(name),
+    ),
   ).toHaveLength(1);
-  const cacheName = registrationState.caches[0]!;
-  expect(cacheName).toMatch(/^openbiofigure-[a-f0-9]{16}$/);
+  expect(
+    registrationState.caches.every((name) =>
+      /^openbiofigure(?:-assets)?-[a-f0-9]{16}$/.test(name),
+    ),
+  ).toBe(true);
+  expect(registrationState.shellEntries.length).toBeLessThan(50);
+  expect(registrationState.shellEntries).not.toContainEqual(
+    expect.stringMatching(/\/assets\/[^/]+\.svg$/),
+  );
+  const shellCacheName = registrationState.shellCache!;
   await page.reload();
   await expect(page.getByTestId("workspace")).toBeVisible();
+  await addMitochondrion(page);
   const offlineState = await page.evaluate(
     async (currentCacheName) => ({
       controller: navigator.serviceWorker.controller?.scriptURL ?? null,
       entries: (await (await window.caches.open(currentCacheName)).keys()).map(
         (request) => request.url,
       ),
+      caches: await window.caches.keys(),
     }),
-    cacheName,
+    shellCacheName,
   );
   expect(offlineState, JSON.stringify(offlineState)).toMatchObject({
     controller: expect.stringContaining("/sw.js"),
+    caches: expect.arrayContaining([
+      expect.stringMatching(/^openbiofigure-assets-[a-f0-9]{16}$/),
+    ]),
   });
   await context.setOffline(true);
   const cacheProbe = await page.evaluate(async (urls) => {
@@ -457,11 +602,21 @@ test("keeps the core local workflow available offline", async ({
     expect.objectContaining({ status: "failed" }),
   );
   await page.goto("/");
+  await expect(
+    page.getByRole("heading", {
+      name: "Make scientific figures clear, editable, and attributable.",
+    }),
+  ).toBeVisible();
+  await page.goto("/app/");
   await expect(page.getByTestId("workspace")).toBeVisible();
   await page.getByLabel("Search scientific assets").fill("mitochondria");
   await expect(
     page.getByRole("button", { name: "Add to canvas: Mitochondrion" }),
   ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Add to canvas: Mitochondrion" })
+    .click();
+  await expect(page.getByText("Provenance complete")).toBeVisible();
   await page.getByTestId("add-rectangle").click();
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("export-svg").click();

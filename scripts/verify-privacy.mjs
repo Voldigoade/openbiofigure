@@ -84,8 +84,14 @@ async function walk(directory) {
         findings.push(`${relative(root, path)}: local hostname`);
       const emails =
         content.match(/[A-Z0-9._%+-]+@[A-Z][A-Z0-9.-]*\.[A-Z]{2,}/gi) ?? [];
+      // pnpm mirrors public registry deprecation notices into its generated
+      // lockfile. They are dependency metadata, not maintainer identity; the
+      // secret-pattern checks below still cover the lockfile.
       for (const email of emails)
-        if (!email.endsWith("@users.noreply.github.com"))
+        if (
+          displayPath !== "pnpm-lock.yaml" &&
+          !email.endsWith("@users.noreply.github.com")
+        )
           findings.push(`${relative(root, path)}: email address`);
       if (
         /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}/.test(

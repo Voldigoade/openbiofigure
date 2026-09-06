@@ -30,7 +30,12 @@ export function LicensingPanel({
         <span className="score-icon">{check.ready ? <Check /> : "!"}</span>
         <div>
           <strong>Publication check</strong>
-          <span>{check.ready ? "Provenance complete" : "Review required"}</span>
+          <span className="publication-state">
+            {check.ready ? "Ready" : "Warning"}
+          </span>
+          <small>
+            {check.ready ? "Provenance complete" : "Review required"}
+          </small>
         </div>
       </div>
       <ul className="check-list">

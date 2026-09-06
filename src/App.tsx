@@ -20,6 +20,10 @@ import type { InspectorTab, PendingSvg, SaveState } from "./app/types";
 import { seedProvider } from "./assets/provider";
 import { NewDocumentDialog } from "./components/dialogs/NewDocumentDialog";
 import { ChartDialog } from "./components/dialogs/ChartDialog";
+import {
+  CommandPalette,
+  type CommandAction,
+} from "./components/dialogs/CommandPalette";
 import { KeyboardShortcutsDialog } from "./components/dialogs/KeyboardShortcutsDialog";
 import { SvgMetadataDialog } from "./components/dialogs/SvgMetadataDialog";
 import { sanitizeSvg } from "./domain/assets/sanitize";
@@ -45,6 +49,12 @@ import { createProject } from "./domain/project/factory";
 import { ProjectHistory } from "./domain/project/history";
 import { migrateProject } from "./domain/project/migrations";
 import type { OpenBioFigureProject } from "./domain/project/schema";
+import {
+  applyAppearancePreferences,
+  loadPreferences,
+  savePreferences,
+  type AppPreferences,
+} from "./domain/preferences/preferences";
 import { createTemplateProject } from "./domain/templates/templates";
 import { buildPublicationReport } from "./domain/publication/preflight";
 import {
@@ -74,30 +84,6 @@ const AssetsPanel = lazy(async () => ({
 
 type AppView = "home" | "editor" | "settings";
 
-interface AppPreferences {
-  gridSize: number;
-  snapToGrid: boolean;
-}
-
-function loadPreferences(): AppPreferences {
-  try {
-    const value = JSON.parse(
-      window.localStorage.getItem("openbiofigure:preferences:v1") ?? "{}",
-    ) as Partial<AppPreferences>;
-    return {
-      gridSize:
-        Number.isInteger(value.gridSize) &&
-        Number(value.gridSize) >= 2 &&
-        Number(value.gridSize) <= 200
-          ? Number(value.gridSize)
-          : 20,
-      snapToGrid: value.snapToGrid === true,
-    };
-  } catch {
-    return { gridSize: 20, snapToGrid: false };
-  }
-}
-
 function rememberAssetUse(assetId: string) {
   try {
     const state = loadAssetLibraryState(window.localStorage);
@@ -120,7 +106,9 @@ export function App() {
   const [autosaveProject, setAutosaveProject] =
     useState<OpenBioFigureProject | null>(null);
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
-  const [preferences, setPreferences] = useState(loadPreferences);
+  const [preferences, setPreferences] = useState(() =>
+    loadPreferences(window.localStorage),
+  );
   const [selection, setSelection] = useState<SelectionSnapshot | null>(null);
   const [layers, setLayers] = useState<LayerSnapshot[]>([]);
   const [filters, setFilters] = useState(DEFAULT_ASSET_FILTERS);
@@ -131,8 +119,9 @@ export function App() {
   const [pendingSvg, setPendingSvg] = useState<PendingSvg | null>(null);
   const [shortcutsDialog, setShortcutsDialog] = useState(false);
   const [chartDialog, setChartDialog] = useState(false);
+  const [commandPalette, setCommandPalette] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
-  const [exportScale, setExportScale] = useState(2);
+  const [exportScale, setExportScale] = useState(preferences.pngExportScale);
   const [notice, setNotice] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -140,6 +129,7 @@ export function App() {
   const editorRef = useRef<FabricEditor | null>(null);
   const historyRef = useRef(new ProjectHistory(project));
   const initialProjectRef = useRef(project);
+  const initialPreferencesRef = useRef(preferences);
   const applyingHistory = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
   const openProjectRef = useRef<HTMLInputElement>(null);
@@ -197,7 +187,11 @@ export function App() {
         setAutosaveProject(saved);
         setRecentProjects(await storage.listRecent());
         historyRef.current = new ProjectHistory(restored);
-        if (saved && window.sessionStorage.getItem(ACTIVE_SESSION_KEY)) {
+        if (
+          saved &&
+          (window.sessionStorage.getItem(ACTIVE_SESSION_KEY) ||
+            initialPreferencesRef.current.startup === "reopen")
+        ) {
           setView("editor");
         }
         setReady(true);
@@ -229,11 +223,13 @@ export function App() {
   }, [ready, view, handleSnapshot]);
 
   useEffect(() => {
-    window.localStorage.setItem(
-      "openbiofigure:preferences:v1",
-      JSON.stringify(preferences),
-    );
+    savePreferences(window.localStorage, preferences);
+    applyAppearancePreferences(preferences);
   }, [preferences]);
+
+  useEffect(() => {
+    setExportScale(preferences.pngExportScale);
+  }, [preferences.pngExportScale]);
 
   useEffect(() => {
     const protectUnsavedChanges = (event: BeforeUnloadEvent) => {
@@ -398,18 +394,24 @@ export function App() {
 
   const addAsset = useCallback(
     async (asset: AssetMetadata, point?: { x: number; y: number }) => {
-      const svg = sanitizeSvg(await seedProvider.loadSvg(asset)).svg;
-      const { file, integrity, ...metadata } = asset;
-      void file;
-      void integrity;
-      await editorRef.current?.addAsset(
-        { ...metadata, svg, verified: true },
-        point,
-      );
-      rememberAssetUse(asset.id);
-      setTab("licensing");
+      try {
+        const svg = sanitizeSvg(await seedProvider.loadSvg(asset)).svg;
+        const { file, integrity, ...metadata } = asset;
+        void file;
+        void integrity;
+        await editorRef.current?.addAsset(
+          { ...metadata, svg, verified: true },
+          point,
+        );
+        rememberAssetUse(asset.id);
+        setTab("licensing");
+      } catch {
+        showNotice(
+          "This asset could not be loaded. If you are offline, reconnect once to cache it or use the desktop app for the complete offline catalog.",
+        );
+      }
     },
-    [],
+    [showNotice],
   );
 
   const handleDrop = async (event: DragEvent) => {
@@ -600,9 +602,14 @@ export function App() {
   useEffect(() => {
     const onApplicationShortcut = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
+      const mod = event.ctrlKey || event.metaKey;
+      if (mod && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setCommandPalette((open) => !open);
+        return;
+      }
       if (target.matches("input, textarea, select") || target.isContentEditable)
         return;
-      const mod = event.ctrlKey || event.metaKey;
       if (mod && event.key.toLowerCase() === "n") {
         event.preventDefault();
         setNewDialog(true);
@@ -641,6 +648,127 @@ export function App() {
     goHome();
   };
 
+  const commandActions: CommandAction[] = [
+    {
+      id: "command-new-figure",
+      label: "New figure",
+      description: "Choose a blank document or scientific template",
+      group: "Document",
+      keywords: ["document", "template"],
+      shortcut: "Ctrl N",
+      run: () => setNewDialog(true),
+    },
+    {
+      id: "command-open-project",
+      label: "Open project",
+      description: "Open an OpenBioFigure project from this device",
+      group: "Document",
+      keywords: ["file", "load"],
+      shortcut: "Ctrl O",
+      run: requestOpenProject,
+    },
+    ...(view === "editor"
+      ? [
+          {
+            id: "command-add-text",
+            label: "Add text",
+            description: "Place an editable text label on the figure",
+            group: "Create" as const,
+            keywords: ["label", "caption", "type"],
+            run: () => editorRef.current?.addText(),
+          },
+          {
+            id: "command-add-arrow",
+            label: "Add arrow",
+            description: "Place a directional arrow on the figure",
+            group: "Create" as const,
+            keywords: ["connector", "direction", "flow"],
+            run: () => editorRef.current?.addArrow(),
+          },
+          {
+            id: "command-add-panel",
+            label: "Add figure panel",
+            description: "Insert an editable labelled publication panel",
+            group: "Create" as const,
+            keywords: ["layout", "scientific", "letter"],
+            run: () => editorRef.current?.addScientificElement("panel"),
+          },
+          {
+            id: "command-create-chart",
+            label: "Create chart",
+            description: "Build an editable local bar or line chart",
+            group: "Create" as const,
+            keywords: ["graph", "data", "bar", "line"],
+            run: () => setChartDialog(true),
+          },
+          {
+            id: "command-search-assets",
+            label: "Search scientific assets",
+            description: "Move focus to the verified local catalog",
+            group: "View" as const,
+            keywords: ["library", "cell", "icon", "bioicons"],
+            run: () =>
+              window.requestAnimationFrame(() =>
+                document
+                  .querySelector<HTMLInputElement>(
+                    "[aria-label='Search scientific assets']",
+                  )
+                  ?.focus(),
+              ),
+          },
+          {
+            id: "command-open-layers",
+            label: "Open layers",
+            description: "Inspect and reorder figure objects",
+            group: "View" as const,
+            keywords: ["objects", "stack", "groups"],
+            run: () => setTab("layers"),
+          },
+          {
+            id: "command-publication-check",
+            label: "Open publication check",
+            description: "Review provenance, licensing, and attribution",
+            group: "View" as const,
+            keywords: ["license", "provenance", "attribution", "ready"],
+            run: () => setTab("licensing"),
+          },
+          {
+            id: "command-fit",
+            label: "Fit figure to screen",
+            description: "Center the complete page in the workspace",
+            group: "View" as const,
+            keywords: ["zoom", "canvas", "page"],
+            shortcut: "0",
+            run: fitToScreen,
+          },
+          {
+            id: "command-export-svg",
+            label: "Export SVG",
+            description: "Download an editable vector figure",
+            group: "Export" as const,
+            keywords: ["vector", "publication", "download"],
+            run: () => void exportSvg(),
+          },
+          {
+            id: "command-export-png",
+            label: "Export PNG",
+            description: `Download a ${exportScale}× raster figure`,
+            group: "Export" as const,
+            keywords: ["image", "raster", "download"],
+            run: () => void exportPng(),
+          },
+        ]
+      : []),
+    {
+      id: "command-settings",
+      label: "Open Settings",
+      description: "Adjust appearance, editor, files, and privacy",
+      group: "Application",
+      keywords: ["preferences", "theme", "grid", "offline"],
+      run: () => openSettings(view === "editor" ? "editor" : "home"),
+    },
+  ];
+
   const sharedFileInput = (
     <input
       ref={openProjectRef}
@@ -655,7 +783,16 @@ export function App() {
     <>
       {newDialog && (
         <NewDocumentDialog
+          initialPreset={preferences.defaultPreset}
           onClose={() => setNewDialog(false)}
+          onCreateTemplate={(templateId) => {
+            void activateProject(
+              applyPreferences(createTemplateProject(templateId)),
+            ).then(() => {
+              setNewDialog(false);
+              window.requestAnimationFrame(fitToScreen);
+            });
+          }}
           onCreate={(preset, width, height) => {
             const next = applyPreferences(
               createProject(preset, { width, height }),
@@ -688,6 +825,12 @@ export function App() {
           }}
         />
       )}
+      {commandPalette && (
+        <CommandPalette
+          actions={commandActions}
+          onClose={() => setCommandPalette(false)}
+        />
+      )}
       {notice && (
         <div className="toast" role="status">
           {notice}
@@ -710,7 +853,7 @@ export function App() {
       <>
         <StartScreen
           autosave={autosaveProject}
-          recent={recentProjects}
+          recent={recentProjects.slice(0, preferences.recentProjectCount)}
           onNew={() => setNewDialog(true)}
           onOpen={requestOpenProject}
           onContinue={() =>
@@ -737,19 +880,17 @@ export function App() {
     return (
       <>
         <SettingsScreen
-          gridSize={preferences.gridSize}
-          snapToGrid={preferences.snapToGrid}
+          initialSection={
+            settingsReturnView === "editor" ? "editor" : "general"
+          }
+          preferences={preferences}
           recentCount={recentProjects.length}
           onBack={() => {
             if (settingsReturnView === "editor") void activateProject(project);
             else setView("home");
           }}
-          onGridSizeChange={(gridSize) => {
-            if (Number.isInteger(gridSize) && gridSize >= 2 && gridSize <= 200)
-              setPreferences((current) => ({ ...current, gridSize }));
-          }}
-          onSnapChange={(snapToGrid) =>
-            setPreferences((current) => ({ ...current, snapToGrid }))
+          onPreferencesChange={(updates: Partial<AppPreferences>) =>
+            setPreferences((current) => ({ ...current, ...updates }))
           }
           onClearRecent={() => {
             void storage.clearRecent().then(refreshRecent);
@@ -794,6 +935,7 @@ export function App() {
         }
         onOpenLayers={() => setTab("layers")}
         onOpenLicensing={() => setTab("licensing")}
+        onQuickActions={() => setCommandPalette(true)}
         onShortcuts={() => setShortcutsDialog(true)}
         onSettings={() => openSettings("editor")}
         onExit={exitApp}
@@ -818,7 +960,13 @@ export function App() {
           next.metadata.updatedAt = new Date().toISOString();
           void replaceProject(next, false);
         }}
-        onExportScaleChange={setExportScale}
+        onExportScaleChange={(pngExportScale) => {
+          if (![1, 2, 3, 4].includes(pngExportScale)) return;
+          setPreferences((current) => ({
+            ...current,
+            pngExportScale: pngExportScale as AppPreferences["pngExportScale"],
+          }));
+        }}
         onExportSvg={() => void exportSvg()}
         onExportPng={() => void exportPng()}
       />

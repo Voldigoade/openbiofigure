@@ -1,7 +1,9 @@
 import type { AssetMetadata } from "./schema";
+import { getAssetTaxonomyForCategory, getAssetTaxonomyGroup } from "./taxonomy";
 
 export interface AssetFilters {
   query: string;
+  taxonomy?: string;
   category: string;
   provider: string;
   license: string;
@@ -17,14 +19,77 @@ const normalize = (value: string) =>
 
 const collator = new Intl.Collator("en", { sensitivity: "base" });
 
+const synonyms = [
+  ["mitochondria", "mitochondrion", "mitochondrial"],
+  ["cell", "cells", "cellular"],
+  ["antibody", "antibodies", "immunoglobulin", "immunoglobulins"],
+  ["bacterium", "bacteria", "bacterial"],
+  ["virus", "viruses", "viral"],
+  ["neuron", "neurons", "neural", "neuronal"],
+  ["dna", "deoxyribonucleic"],
+  ["rna", "ribonucleic"],
+  ["microscope", "microscopes", "microscopy", "imaging"],
+  ["protein", "proteins", "peptide", "peptides"],
+  ["nucleus", "nuclei", "nuclear"],
+  ["mouse", "mice", "murine"],
+] as const;
+
+const synonymLookup = new Map<string, readonly string[]>();
+for (const group of synonyms) {
+  for (const term of group) synonymLookup.set(term, group);
+}
+
+interface SearchDocument {
+  haystack: string;
+  title: string;
+  description: string;
+  category: string;
+  provider: string;
+  keywords: string[];
+}
+
+const searchDocuments = new WeakMap<AssetMetadata, SearchDocument>();
+
+function createSearchDocument(asset: AssetMetadata): SearchDocument {
+  const taxonomy = getAssetTaxonomyForCategory(asset.category);
+  const searchableValues = [
+    asset.title,
+    asset.description,
+    asset.category,
+    asset.source.provider,
+    ...asset.keywords,
+    taxonomy?.label ?? "",
+    taxonomy?.description ?? "",
+  ].map(normalize);
+  const expanded = new Set(searchableValues);
+  for (const value of searchableValues) {
+    for (const word of value.split(/\s+/)) {
+      for (const synonym of synonymLookup.get(word) ?? [])
+        expanded.add(synonym);
+    }
+  }
+  return {
+    haystack: [...expanded].join(" "),
+    title: normalize(asset.title),
+    description: normalize(asset.description),
+    category: normalize(asset.category),
+    provider: normalize(asset.source.provider),
+    keywords: asset.keywords.map(normalize),
+  };
+}
+
+function getSearchDocument(asset: AssetMetadata) {
+  const cached = searchDocuments.get(asset);
+  if (cached) return cached;
+  const document = createSearchDocument(asset);
+  searchDocuments.set(asset, document);
+  return document;
+}
+
 function relevance(asset: AssetMetadata, terms: string[]): number {
   if (!terms.length) return 0;
-
-  const title = normalize(asset.title);
-  const description = normalize(asset.description);
-  const category = normalize(asset.category);
-  const provider = normalize(asset.source.provider);
-  const keywords = asset.keywords.map(normalize);
+  const { title, description, category, provider, keywords } =
+    getSearchDocument(asset);
 
   return terms.reduce((score, term) => {
     if (title === term) return score;
@@ -48,16 +113,11 @@ export function searchAssets(
   const terms = query.split(/\s+/).filter(Boolean);
 
   const matches = assets.filter((asset) => {
-    const haystack = normalize(
-      [
-        asset.title,
-        asset.description,
-        asset.category,
-        asset.source.provider,
-        ...asset.keywords,
-      ].join(" "),
-    );
+    const { haystack } = getSearchDocument(asset);
     const matchesQuery = terms.every((term) => haystack.includes(term));
+    const taxonomy = getAssetTaxonomyGroup(filters.taxonomy ?? "");
+    const matchesTaxonomy =
+      !taxonomy || taxonomy.categories.includes(asset.category);
     const matchesCategory =
       !filters.category || asset.category === filters.category;
     const matchesProvider =
@@ -72,6 +132,7 @@ export function searchAssets(
         !asset.license.attributionRequired);
     return (
       matchesQuery &&
+      matchesTaxonomy &&
       matchesCategory &&
       matchesProvider &&
       matchesLicense &&

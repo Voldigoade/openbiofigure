@@ -7,6 +7,7 @@ const packageJson = JSON.parse(await readFile("package.json", "utf8"));
 const tauriConfig = JSON.parse(
   await readFile("src-tauri/tauri.conf.json", "utf8"),
 );
+const cargoManifest = await readFile("src-tauri/Cargo.toml", "utf8");
 const expected = tag.slice(1);
 const desktopUrl = tauriConfig.app?.windows?.[0]?.url;
 const desktopRecoveryVersion = new URL(
@@ -16,10 +17,13 @@ const desktopRecoveryVersion = new URL(
 if (
   packageJson.version !== expected ||
   tauriConfig.version !== expected ||
+  !new RegExp(`^version = "${expected.replaceAll(".", "\\.")}"$`, "m").test(
+    cargoManifest,
+  ) ||
   desktopRecoveryVersion !== expected
 ) {
   throw new Error(
-    `Release ${tag} does not match package (${packageJson.version}), Tauri (${tauriConfig.version}), and desktop recovery (${desktopRecoveryVersion}) versions.`,
+    `Release ${tag} does not match package (${packageJson.version}), Tauri (${tauriConfig.version}), Cargo, and desktop recovery (${desktopRecoveryVersion}) versions.`,
   );
 }
 console.log(`Release version ${tag} matches all manifests.`);

@@ -6,6 +6,7 @@ import {
   sanitizeSvg,
 } from "../src/domain/assets/sanitize";
 import { searchAssets } from "../src/domain/assets/search";
+import { assetTaxonomy } from "../src/domain/assets/taxonomy";
 import {
   loadAssetLibraryState,
   recordRecentAsset,
@@ -17,9 +18,10 @@ import { validateCatalog } from "../scripts/assets/validate-catalog";
 describe("asset catalog", () => {
   it("validates every bundled file, hash, license, and provenance record", async () => {
     const result = await validateCatalog();
-    expect(result.assets).toHaveLength(410);
+    expect(result.assets).toHaveLength(733);
     expect(result.licenseCounts).toEqual({
       "CC-BY-3.0": 1,
+      "CC-BY-4.0": 323,
       "CC0-1.0": 409,
     });
   }, 20_000);
@@ -27,6 +29,7 @@ describe("asset catalog", () => {
   it("searches title, keywords, category, provider, license and attribution", () => {
     const base = {
       query: "mitochondria",
+      taxonomy: "",
       category: "",
       provider: "",
       license: "",
@@ -61,9 +64,61 @@ describe("asset catalog", () => {
     ).toHaveLength(0);
   });
 
+  it("maps every catalog category to one discoverable scientific topic", () => {
+    const catalogCategories = new Set(
+      seedCatalog.map((asset) => asset.category),
+    );
+    const mappedCategories = assetTaxonomy.flatMap((group) => group.categories);
+
+    expect(new Set(mappedCategories)).toEqual(catalogCategories);
+    expect(mappedCategories).toHaveLength(new Set(mappedCategories).size);
+  });
+
+  it("supports scientific synonyms and topic browsing", () => {
+    const base = {
+      query: "",
+      taxonomy: "",
+      category: "",
+      provider: "",
+      license: "",
+      attribution: "all" as const,
+    };
+
+    expect(
+      searchAssets(seedCatalog, { ...base, query: "mitochondrial" }).some(
+        (asset) => asset.title === "Mitochondrion",
+      ),
+    ).toBe(true);
+    expect(
+      searchAssets(seedCatalog, { ...base, query: "murine" }).some((asset) =>
+        /mouse/i.test(
+          `${asset.title} ${asset.description} ${asset.keywords.join(" ")}`,
+        ),
+      ),
+    ).toBe(true);
+    for (const query of ["antibodies", "neural", "neuronal", "DNA", "RNA"]) {
+      expect(
+        searchAssets(seedCatalog, { ...base, query }).length,
+        query,
+      ).toBeGreaterThan(0);
+    }
+
+    const organelles = searchAssets(seedCatalog, {
+      ...base,
+      taxonomy: "cells-organelles",
+    });
+    const allowed = new Set<string>(
+      assetTaxonomy.find((group) => group.id === "cells-organelles")
+        ?.categories,
+    );
+    expect(organelles.length).toBeGreaterThan(0);
+    expect(organelles.every((asset) => allowed.has(asset.category))).toBe(true);
+  });
+
   it("ranks title matches ahead of description-only matches", () => {
     const results = searchAssets(seedCatalog, {
       query: "mitochondrion",
+      taxonomy: "",
       category: "",
       provider: "",
       license: "",

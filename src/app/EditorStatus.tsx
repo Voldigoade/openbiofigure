@@ -25,7 +25,7 @@ export function EditorStatus({
   return (
     <>
       <footer className="statusbar">
-        <span className={`save-status status-${saveState}`}>
+        <span className={`save-status status-${saveState}`} role="status">
           {saveState === "saving"
             ? labels.saving
             : saveState === "error"
@@ -35,7 +35,7 @@ export function EditorStatus({
         <span className="status-center">
           {selection
             ? `${selection.count} selected · ${selection.name}`
-            : "Ready · No selection"}
+            : "No selection"}
         </span>
         <button
           type="button"
@@ -44,8 +44,13 @@ export function EditorStatus({
             publication.ready ? "publication-ready" : "publication-warning"
           }
         >
-          {publication.ready ? <Check /> : "!"} {publication.completeCount}/
-          {publication.usedAssetCount} assets with complete provenance
+          {publication.ready ? <Check /> : "!"}
+          <span>
+            {publication.ready ? "Publication ready" : "Review licensing"}
+          </span>
+          <small>
+            {publication.completeCount}/{publication.usedAssetCount} verified
+          </small>
         </button>
       </footer>
       <div className="mobile-message">

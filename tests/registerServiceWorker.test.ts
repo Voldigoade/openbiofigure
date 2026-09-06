@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { clearDesktopOfflineState } from "../src/registerServiceWorker";
+import {
+  clearDesktopOfflineState,
+  resolveServiceWorkerUrl,
+} from "../src/registerServiceWorker";
 
 describe("desktop offline state", () => {
   it("removes service workers and caches that can shadow packaged assets", async () => {
@@ -27,5 +30,22 @@ describe("desktop offline state", () => {
     expect(deleteCache).toHaveBeenCalledTimes(2);
     expect(deleteCache).toHaveBeenNthCalledWith(1, "old-release");
     expect(deleteCache).toHaveBeenNthCalledWith(2, "current-release");
+  });
+});
+
+describe("web service worker routing", () => {
+  it("resolves the worker beside the shared manifest from nested routes", () => {
+    const page = {
+      querySelector: vi.fn().mockReturnValue({
+        href: "https://example.test/openbiofigure/manifest.webmanifest",
+      }),
+    };
+
+    expect(
+      resolveServiceWorkerUrl(
+        page as unknown as Document,
+        "https://example.test/openbiofigure/app/",
+      ),
+    ).toBe("https://example.test/openbiofigure/sw.js");
   });
 });

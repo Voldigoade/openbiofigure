@@ -4,13 +4,41 @@
   "repository": "duerrsimon/bioicons",
   "revision": "d29e766ea7580b8063c4f47b29e872db40a4d979",
   "retrievedAt": "2026-09-05",
-  "licenseDirectory": "static/icons/cc-0",
-  "license": {
-    "id": "CC0-1.0",
-    "name": "CC0 1.0 Universal",
-    "url": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "attributionRequired": false
-  },
+  "licenses": [
+    {
+      "upstreamId": "cc-0",
+      "directory": "static/icons/cc-0",
+      "ingest": true,
+      "license": {
+        "id": "CC0-1.0",
+        "name": "CC0 1.0 Universal",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "attributionRequired": false
+      }
+    },
+    {
+      "upstreamId": "cc-by-3.0",
+      "directory": "static/icons/cc-by-3.0",
+      "ingest": false,
+      "license": {
+        "id": "CC-BY-3.0",
+        "name": "Creative Commons Attribution 3.0 Unported",
+        "url": "https://creativecommons.org/licenses/by/3.0/",
+        "attributionRequired": true
+      }
+    },
+    {
+      "upstreamId": "cc-by-4.0",
+      "directory": "static/icons/cc-by-4.0",
+      "ingest": true,
+      "license": {
+        "id": "CC-BY-4.0",
+        "name": "Creative Commons Attribution 4.0 International",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "attributionRequired": true
+      }
+    }
+  ],
   "maxSourceBytes": 100000,
   "upstreamReadme": "https://github.com/duerrsimon/bioicons/blob/d29e766ea7580b8063c4f47b29e872db40a4d979/README.md"
 }

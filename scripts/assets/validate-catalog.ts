@@ -21,15 +21,21 @@ const providerSchema = z.object({
   label: z.string().min(1),
   repository: z.string().regex(/^[^/]+\/[^/]+$/),
   revision: z.string().regex(/^[a-f0-9]{40}$/),
-  licenseDirectory: z.string().min(1),
+  licenses: z.array(
+    z.object({
+      directory: z.string().min(1),
+      license: z.object({
+        id: z.string().min(1),
+        name: z.string().min(1),
+        url: z.string().url(),
+        attributionRequired: z.boolean(),
+      }),
+    }),
+  ),
 });
 
 const windowsReservedName = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
 const unknownCreator = /^(?:null|unknown|n\/?a|none|anonymous|-)$/i;
-const bioiconsLicenseDirectories: Record<string, string> = {
-  "CC0-1.0": "cc-0",
-  "CC-BY-3.0": "cc-by-3.0",
-};
 
 function encodePath(path: string) {
   return path.split("/").map(encodeURIComponent).join("/");
@@ -44,6 +50,9 @@ export async function validateCatalog(): Promise<{
     .parse(JSON.parse(await readFile(catalogPath, "utf8")) as unknown);
   const bioicons = providerSchema.parse(
     JSON.parse(await readFile(providerPath, "utf8")) as unknown,
+  );
+  const bioiconsLicenses = new Map(
+    bioicons.licenses.map((item) => [item.license.id, item]),
   );
   const files = (await readdir(svgDirectory))
     .filter((file) => file.endsWith(".svg"))
@@ -90,16 +99,19 @@ export async function validateCatalog(): Promise<{
     if (asset.license.id === "UNKNOWN")
       throw new Error(`Unknown catalog license for ${asset.id}.`);
     if (asset.source.provider === bioicons.label) {
-      const licenseDirectory = bioiconsLicenseDirectories[asset.license.id];
-      if (!licenseDirectory)
+      const licenseSource = bioiconsLicenses.get(asset.license.id);
+      if (!licenseSource)
         throw new Error(`Unsupported Bioicons license for ${asset.id}.`);
+      if (
+        asset.license.name !== licenseSource.license.name ||
+        asset.license.url !== licenseSource.license.url ||
+        asset.license.attributionRequired !==
+          licenseSource.license.attributionRequired
+      )
+        throw new Error(`Bioicons license metadata mismatch for ${asset.id}.`);
       if (asset.source.revision !== bioicons.revision)
         throw new Error(`Unpinned Bioicons revision for ${asset.id}.`);
-      if (
-        !asset.source.upstreamPath.startsWith(
-          `static/icons/${licenseDirectory}/`,
-        )
-      )
+      if (!asset.source.upstreamPath.startsWith(`${licenseSource.directory}/`))
         throw new Error(`Bioicons license path mismatch for ${asset.id}.`);
       const encodedPath = encodePath(asset.source.upstreamPath);
       const expectedSource = `https://github.com/${bioicons.repository}/blob/${bioicons.revision}/${encodedPath}`;

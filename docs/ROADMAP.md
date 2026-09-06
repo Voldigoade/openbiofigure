@@ -12,7 +12,7 @@ Implemented in V0.1 and expanded in V0.2: document presets, core objects and tra
 
 ## Phase 2 — Scientific asset catalog
 
-Expanded for V0.2 to 410 Bioicons assets through a pinned, reproducible CC0 ingestion pipeline, with 12 incomplete records rejected and one duplicate skipped. Ranked search, filters, favorites, and recent-use views are implemented locally. Further providers or license families require source-specific review and contributor evidence.
+Expanded to 733 Bioicons assets through a pinned, reproducible CC0 and CC-BY-4.0 ingestion pipeline, with 17 candidates rejected and four duplicate contents skipped. Ranked synonym-aware search, scientific topic browsing, source/licence filters, favorites, and recent-use views are implemented locally. Further providers or licence families require source-specific review and contributor evidence.
 
 ## Phase 3 — Provenance/licensing engine
 

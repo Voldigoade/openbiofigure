@@ -22,6 +22,14 @@ function reportOfflineSetupFailure(error: unknown): void {
   console.warn("OpenBioFigure offline setup could not be completed.", error);
 }
 
+export function resolveServiceWorkerUrl(
+  page: Pick<Document, "querySelector">,
+  locationHref: string,
+): string {
+  const manifest = page.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+  return new URL("sw.js", manifest?.href ?? locationHref).href;
+}
+
 export function registerServiceWorker(): void {
   if (!("serviceWorker" in navigator) || !import.meta.env.PROD) return;
 
@@ -35,7 +43,7 @@ export function registerServiceWorker(): void {
 
   window.addEventListener("load", () => {
     void navigator.serviceWorker
-      .register("./sw.js")
+      .register(resolveServiceWorkerUrl(document, window.location.href))
       .catch(reportOfflineSetupFailure);
   });
 }

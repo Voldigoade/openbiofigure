@@ -94,6 +94,50 @@ describe("licensing and attribution", () => {
     expect(generateAttributions(project).legend).toContain("CC BY 3.0");
   });
 
+  it("keeps CC0 provenance while requiring individual CC BY 4.0 credit", () => {
+    const project = createProject();
+    const cc0 = seedCatalog.find((asset) => asset.license.id === "CC0-1.0")!;
+    const ccBy = seedCatalog.find((asset) => asset.license.id === "CC-BY-4.0")!;
+    project.assets.push(projectAsset(cc0), projectAsset(ccBy));
+    project.objects.push(
+      ...[cc0, ccBy].map((asset, index) => ({
+        id: `asset-${index}`,
+        name: asset.title,
+        kind: "svg" as const,
+        assetId: asset.id,
+        x: index * 20,
+        y: 0,
+        width: 10,
+        height: 10,
+        scaleX: 1,
+        scaleY: 1,
+        angle: 0,
+        opacity: 1,
+        visible: true,
+        locked: false,
+        fill: null,
+        stroke: null,
+        strokeWidth: 0,
+      })),
+    );
+
+    const check = checkPublication(project);
+    expect(check).toMatchObject({
+      usedAssetCount: 2,
+      completeCount: 2,
+      ready: true,
+      licenseCounts: { "CC0-1.0": 1, "CC-BY-4.0": 1 },
+    });
+    const attribution = generateAttributions(project);
+    const requiredSection = attribution.markdown.split(
+      "## Provenance ledger",
+    )[0]!;
+    expect(requiredSection).toContain(ccBy.attribution.text);
+    expect(requiredSection).not.toContain(cc0.attribution.text);
+    expect(attribution.markdown).toContain(cc0.source.sourceUrl);
+    expect(attribution.markdown).toContain(ccBy.license.url);
+  });
+
   it("flags unknown licenses and modified assets without inventing data", () => {
     const project = createProject();
     const asset = projectAsset(seedCatalog[1]!);

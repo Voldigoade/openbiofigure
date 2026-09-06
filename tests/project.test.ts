@@ -26,6 +26,15 @@ describe("project model", () => {
     }
   });
 
+  it("keeps the treatment timeline visible on its light document", () => {
+    const project = createTemplateProject("treatment-timeline");
+    const timeline = project.objects.find(
+      (object) => object.name === "Study timeline",
+    );
+
+    expect(timeline).toMatchObject({ kind: "line", stroke: "#35545a" });
+  });
+
   it("creates schema-valid editable scientific elements", () => {
     const kinds: ScientificElementKind[] = [
       "cell",

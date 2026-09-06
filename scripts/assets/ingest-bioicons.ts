@@ -15,13 +15,21 @@ const providerSchema = z.object({
   repository: z.string().regex(/^[^/]+\/[^/]+$/),
   revision: z.string().regex(/^[a-f0-9]{40}$/),
   retrievedAt: z.iso.date(),
-  licenseDirectory: z.string().min(1),
-  license: z.object({
-    id: z.literal("CC0-1.0"),
-    name: z.string().min(1),
-    url: z.string().url(),
-    attributionRequired: z.literal(false),
-  }),
+  licenses: z
+    .array(
+      z.object({
+        upstreamId: z.string().min(1),
+        directory: z.string().min(1),
+        ingest: z.boolean(),
+        license: z.object({
+          id: z.string().min(1),
+          name: z.string().min(1),
+          url: z.string().url(),
+          attributionRequired: z.boolean(),
+        }),
+      }),
+    )
+    .min(1),
   maxSourceBytes: z.number().int().positive(),
   upstreamReadme: z.string().url(),
 });
@@ -113,9 +121,15 @@ const [iconsValue, authorsValue] = await Promise.all([
 ]);
 const upstreamIcons = upstreamIconSchema.array().parse(iconsValue);
 const authors = z.record(z.string(), z.string()).parse(authorsValue);
+const enabledLicenses = provider.licenses.filter((item) => item.ingest);
+const enabledUpstreamIds = new Set(
+  enabledLicenses.map((item) => item.upstreamId),
+);
 const iconsByKey = new Map<string, z.infer<typeof upstreamIconSchema>[]>();
-for (const icon of upstreamIcons.filter((item) => item.license === "cc-0")) {
-  const key = `${icon.category}\0${icon.name}`;
+for (const icon of upstreamIcons.filter((item) =>
+  enabledUpstreamIds.has(item.license),
+)) {
+  const key = `${icon.license}\0${icon.category}\0${icon.name}`;
   iconsByKey.set(key, [...(iconsByKey.get(key) ?? []), icon]);
 }
 
@@ -131,15 +145,19 @@ function safeAuthorUrl(value: string | undefined) {
   }
 }
 
-const candidates = tree.tree
-  .filter(
-    (entry) =>
-      entry.type === "blob" &&
-      entry.path.startsWith(`${provider.licenseDirectory}/`) &&
-      entry.path.toLowerCase().endsWith(".svg") &&
-      (entry.size ?? Number.POSITIVE_INFINITY) <= provider.maxSourceBytes,
+const candidates = enabledLicenses
+  .flatMap((licenseSource) =>
+    tree.tree
+      .filter(
+        (entry) =>
+          entry.type === "blob" &&
+          entry.path.startsWith(`${licenseSource.directory}/`) &&
+          entry.path.toLowerCase().endsWith(".svg") &&
+          (entry.size ?? Number.POSITIVE_INFINITY) <= provider.maxSourceBytes,
+      )
+      .map((entry) => ({ entry, licenseSource })),
   )
-  .sort((left, right) => left.path.localeCompare(right.path));
+  .sort((left, right) => left.entry.path.localeCompare(right.entry.path));
 
 const existing = assetMetadataSchema
   .array()
@@ -152,14 +170,18 @@ const rejectedPaths: { path: string; reason: string }[] = [];
 let alreadyPresent = 0;
 const dom = new JSDOM("<!doctype html>");
 
-async function ingest(entry: (typeof candidates)[number]) {
+async function ingest(candidate: (typeof candidates)[number]) {
+  const { entry, licenseSource } = candidate;
   const segments = entry.path.split("/");
   const fileName = segments.at(-1)!;
   const name = fileName.replace(/\.svg$/i, "");
   const metadataName = name.replace(/\.(?:drawio|inkscape)$/i, "");
   const author = segments.at(-2)!;
   const category = segments.at(-3)!;
-  const matchingIcons = iconsByKey.get(`${category}\0${metadataName}`) ?? [];
+  const matchingIcons =
+    iconsByKey.get(
+      `${licenseSource.upstreamId}\0${category}\0${metadataName}`,
+    ) ?? [];
   const upstreamIcon =
     matchingIcons.find((icon) => slug(icon.author) === slug(author)) ??
     (matchingIcons.length === 1 ? matchingIcons[0] : undefined);
@@ -186,8 +208,26 @@ async function ingest(entry: (typeof candidates)[number]) {
     return;
   }
 
-  const upstreamSvg = await fetchText(`${rawBase}${encodePath(entry.path)}`);
-  const sanitized = sanitizeSvg(upstreamSvg, dom.window).svg;
+  let upstreamSvg: string;
+  try {
+    upstreamSvg = await fetchText(`${rawBase}${encodePath(entry.path)}`);
+  } catch (error) {
+    rejectedPaths.push({
+      path: entry.path,
+      reason: `Source retrieval failed: ${error instanceof Error ? error.message : "unknown error"}`,
+    });
+    return;
+  }
+  let sanitized: string;
+  try {
+    sanitized = sanitizeSvg(upstreamSvg, dom.window).svg;
+  } catch (error) {
+    rejectedPaths.push({
+      path: entry.path,
+      reason: `SVG validation failed: ${error instanceof Error ? error.message : "unknown error"}`,
+    });
+    return;
+  }
   const digest = `sha256-${createHash("sha256").update(sanitized).digest("hex").toUpperCase()}`;
   if (digests.has(digest)) {
     duplicatePaths.push(entry.path);
@@ -237,17 +277,17 @@ async function ingest(entry: (typeof candidates)[number]) {
       name: creatorName,
       url: safeAuthorUrl(authors[creatorName] ?? authors[author]),
     },
-    license: provider.license,
+    license: licenseSource.license,
     attribution: {
-      text: `${title} by ${creatorName}, distributed via Bioicons under CC0 1.0.`,
+      text: `${title} by ${creatorName}, distributed via Bioicons under ${licenseSource.license.name}.`,
       modified: false,
       modificationNotes: null,
     },
   });
-  await writeFile(resolve(svgDirectory, localFile), sanitized, "utf8");
-  additions.push(asset);
   sourcePaths.add(entry.path);
   digests.add(digest);
+  await writeFile(resolve(svgDirectory, localFile), sanitized, "utf8");
+  additions.push(asset);
 }
 
 const concurrency = 8;
@@ -258,6 +298,21 @@ for (let offset = 0; offset < candidates.length; offset += concurrency) {
 const catalog = [...existing, ...additions].sort((left, right) =>
   left.id.localeCompare(right.id),
 );
+const acceptedAssets = catalog
+  .filter(
+    (asset) =>
+      asset.source.provider === provider.label &&
+      enabledLicenses.some((item) =>
+        asset.source.upstreamPath.startsWith(`${item.directory}/`),
+      ),
+  )
+  .map((asset) => ({
+    id: asset.id,
+    path: asset.source.upstreamPath,
+    license: asset.license.id,
+    integrity: asset.integrity,
+  }))
+  .sort((left, right) => left.path.localeCompare(right.path));
 await writeFile(catalogPath, `${JSON.stringify(catalog, null, 2)}\n`, "utf8");
 await writeFile(
   reportPath,
@@ -268,12 +323,15 @@ await writeFile(
       revision: provider.revision,
       retrievedAt: provider.retrievedAt,
       policy: {
-        licenseDirectory: provider.licenseDirectory,
+        licenses: enabledLicenses.map((item) => ({
+          upstreamId: item.upstreamId,
+          directory: item.directory,
+          license: item.license.id,
+        })),
         maxSourceBytes: provider.maxSourceBytes,
       },
       candidates: candidates.length,
-      alreadyPresent,
-      newlyImported: additions.length,
+      accepted: acceptedAssets,
       duplicateContentsSkipped: duplicatePaths.sort(),
       rejected: rejectedPaths.sort((left, right) =>
         left.path.localeCompare(right.path),
@@ -287,5 +345,5 @@ await writeFile(
 );
 
 console.log(
-  `Bioicons ingestion complete: ${additions.length} added, ${alreadyPresent} already present, ${duplicatePaths.length} duplicate contents skipped, ${rejectedPaths.length} rejected, ${catalog.length} total.`,
+  `Bioicons ingestion complete: ${acceptedAssets.length} accepted by enabled policies (${additions.length} added, ${alreadyPresent} already present), ${duplicatePaths.length} duplicate contents skipped, ${rejectedPaths.length} rejected, ${catalog.length} total.`,
 );

@@ -20,7 +20,7 @@ Scientific figures often require several tools, manual asset searches, and a sep
 - Editable SVG and configurable-resolution PNG export with provenance metadata
 - Sanitized local SVG import with optional provenance metadata
 
-The bundled verified catalog contains 410 Bioicons assets: 409 CC0-1.0 assets and one CC-BY-3.0 asset. A pinned, reproducible ingestion pipeline rejects incomplete provenance and unsafe SVG content. OpenBioFigure helps track licensing metadata; it does not provide legal advice.
+The bundled verified catalog contains 733 Bioicons assets: 409 CC0-1.0, 323 CC-BY-4.0, and one individually reviewed CC-BY-3.0 asset. A pinned, reproducible ingestion pipeline rejects incomplete provenance and unsafe SVG content. OpenBioFigure helps track licensing metadata; it does not provide legal advice.
 
 ## Try it
 

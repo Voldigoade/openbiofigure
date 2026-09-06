@@ -21,7 +21,7 @@ The Windows packages embed the WebView2 offline installer. OpenBioFigure does no
 Download an artifact and `SHA256SUMS.txt` from the same GitHub release. From PowerShell:
 
 ```powershell
-Get-FileHash .\OpenBioFigure_0.2.1_x64-setup.exe -Algorithm SHA256
+Get-FileHash .\OpenBioFigure_0.3.0_x64-setup.exe -Algorithm SHA256
 ```
 
 Compare the displayed hash with the corresponding line in `SHA256SUMS.txt`.
@@ -31,7 +31,7 @@ Compare the displayed hash with the corresponding line in `SHA256SUMS.txt`.
 Install the GitHub CLI, then run:
 
 ```bash
-gh attestation verify OpenBioFigure_0.2.1_x64-setup.exe \
+gh attestation verify OpenBioFigure_0.3.0_x64-setup.exe \
   --repo Voldigoade/openbiofigure \
   --signer-workflow Voldigoade/openbiofigure/.github/workflows/release.yml
 ```
