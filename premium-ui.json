@@ -1,0 +1,17 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": ["src"],
+  "locale": "en-US",
+  "canonicalMap": "UX-CONTRACT.md",
+  "requiredCapabilities": ["Select/Listbox", "Form", "Scrollbar", "Toast"],
+  "ownership": {
+    "Select/Listbox": "native",
+    "Form": "authored",
+    "Scrollbar": "authored",
+    "Toast": "authored"
+  },
+  "evidence": {
+    "fullFlow": "tests/e2e/editor.spec.ts",
+    "nativeDesktop": "tests/desktop/smoke.spec.ts"
+  }
+}
